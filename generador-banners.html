@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de banners para partidas</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #1c1c1e;
+    color: #f0f0f0;
+    margin: 0;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin: 0; }
+  .wrap {
+    display: flex;
+    gap: 32px;
+    width: 100%;
+    max-width: 1100px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .panel {
+    background: #2a2a2d;
+    border-radius: 12px;
+    padding: 20px;
+    flex: 1 1 340px;
+    max-width: 400px;
+  }
+  .panel h2 { font-size: 15px; margin: 0 0 12px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; }
+  label { display: block; font-size: 13px; margin: 12px 0 4px; color: #ccc; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #1c1c1e;
+    color: #f0f0f0;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+  .bg-mode-buttons { display: flex; gap: 6px; margin-bottom: 10px; }
+  .bg-mode-buttons button {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #1c1c1e;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .bg-mode-buttons button.active {
+    background: #4a7dff;
+    color: white;
+    border-color: #4a7dff;
+  }
+  input[type=color] {
+    width: 100%;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .bg-section { display: none; }
+  .bg-section.active { display: block; }
+  canvas {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: repeating-conic-gradient(#333 0% 25%, #2a2a2a 0% 50%) 50% / 20px 20px;
+  }
+  .canvas-wrap { flex: 1 1 500px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  button.main-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    background: #4a7dff;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+  }
+  button.main-btn:hover { background: #3a6ce0; }
+  .size-select { margin-bottom: 10px; }
+  .font-controls { display: flex; gap: 10px; }
+  .font-controls > div { flex: 1; }
+  .field-color-row { display: flex; gap: 10px; align-items: center; }
+  .field-color-row input[type=color] { width: 44px; height: 30px; flex: none; }
+  small { color: #888; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Generador de banners para partidas de juegos de mesa</h1>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>Contenido</h2>
+
+    <label>Título / Juego</label>
+    <input type="text" id="titulo" value="Noche de Dune: Imperium">
+
+    <div class="row">
+      <div>
+        <label>Fecha</label>
+        <input type="date" id="fecha" value="2026-07-26">
+      </div>
+      <div>
+        <label>Hora inicio</label>
+        <input type="text" id="hora" value="18:00">
+      </div>
+      <div>
+        <label>Hora fin (opcional)</label>
+        <input type="text" id="horaFin" value="" placeholder="21:00">
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Lugar</label>
+        <input type="text" id="lugar" value="La Forja (Mieres)">
+      </div>
+      <div>
+        <label>Plazas</label>
+        <input type="text" id="plazas" value="4 jugadores">
+      </div>
+    </div>
+
+    <label>Notas / descripción</label>
+    <textarea id="notas">Partida abierta, se explican reglas. ¡Apúntate en comentarios!</textarea>
+
+    <h2 style="margin-top:20px">BoardGameGeek</h2>
+    <div class="row">
+      <div>
+        <label>Dificultad BGG (0.1 - 5)</label>
+        <input type="number" id="bggDificultad" value="2.1" min="0" max="5" step="0.1">
+      </div>
+      <div>
+        <label>Puntuación BGG (0 - 10)</label>
+        <input type="number" id="bggPuntuacion" value="7.8" min="0" max="10" step="0.1">
+      </div>
+    </div>
+
+    <h2 style="margin-top:20px">Etiquetas</h2>
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+      <input type="checkbox" id="chkLgtbi" style="width:auto;" checked> 🏳️‍🌈 LGTBIQ Friendly
+    </label>
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:8px;">
+      <input type="checkbox" id="chkNovatos" style="width:auto;" checked> 🤝 Novat@s Friendly
+    </label>
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:8px;">
+      <input type="checkbox" id="chkMP" style="width:auto;" checked> ✉️ MP para apuntarte
+    </label>
+
+    <h2 style="margin-top:20px">Tipografía</h2>
+    <div class="font-controls">
+      <div>
+        <label>Color del texto</label>
+        <input type="color" id="colorTexto" value="#ffffff">
+      </div>
+      <div>
+        <label>Tamaño título</label>
+        <input type="number" id="tamTitulo" value="60" min="20" max="120">
+      </div>
+    </div>
+    <label style="margin-top:14px">Escala general del texto: <span id="escalaValor">100%</span></label>
+    <input type="range" id="escalaTexto" min="50" max="180" value="100" step="5">
+  </div>
+
+  <div class="panel">
+    <h2>Fondo</h2>
+    <div class="bg-mode-buttons">
+      <button type="button" data-mode="color" class="active">Color sólido</button>
+      <button type="button" data-mode="gradient">Degradado</button>
+      <button type="button" data-mode="image">Imagen (URL)</button>
+    </div>
+
+    <div class="bg-section active" id="bg-color">
+      <label>Color de fondo</label>
+      <input type="color" id="colorFondo" value="#1d2b53">
+    </div>
+
+    <div class="bg-section" id="bg-gradient">
+      <div class="row">
+        <div>
+          <label>Color 1</label>
+          <input type="color" id="gradColor1" value="#1d2b53">
+        </div>
+        <div>
+          <label>Color 2</label>
+          <input type="color" id="gradColor2" value="#7f2b5c">
+        </div>
+      </div>
+      <label>Ángulo (grados)</label>
+      <input type="number" id="gradAngulo" value="135" min="0" max="360">
+    </div>
+
+    <div class="bg-section" id="bg-image">
+      <label>Subir imagen desde tu dispositivo</label>
+      <input type="file" id="imagenArchivo" accept="image/*">
+      <small id="imagenNombre" style="display:block; margin-top:6px;"></small>
+      <label style="margin-top:10px">Oscurecer imagen (overlay)</label>
+      <input type="range" id="overlayOpacidad" min="0" max="90" value="35">
+    </div>
+
+    <h2 style="margin-top:20px">Tamaño del banner</h2>
+    <select id="tamanoBanner" class="size-select">
+      <option value="1200x630">1200 x 630 (redes sociales / Facebook / Twitter)</option>
+      <option value="1080x1080">1080 x 1080 (Instagram cuadrado)</option>
+      <option value="1080x1350">1080 x 1350 (Instagram vertical)</option>
+      <option value="800x400">800 x 400 (banner compacto)</option>
+    </select>
+  </div>
+
+  <div class="canvas-wrap panel" style="max-width:600px">
+    <h2>Vista previa</h2>
+    <canvas id="canvas" width="1200" height="630"></canvas>
+    <button class="main-btn" id="descargarBtn">Descargar PNG</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const inputs = ['titulo','fecha','hora','horaFin','lugar','plazas','notas','colorTexto','tamTitulo','escalaTexto',
+  'colorFondo','gradColor1','gradColor2','gradAngulo','overlayOpacidad',
+  'bggDificultad','bggPuntuacion','chkLgtbi','chkNovatos','chkMP'];
+
+let bgMode = 'color';
+let uploadedImage = null;
+
+document.getElementById('imagenArchivo').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const nombreEl = document.getElementById('imagenNombre');
+  if (!file) return;
+  nombreEl.textContent = 'Cargando...';
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      uploadedImage = img;
+      nombreEl.textContent = '✓ ' + file.name;
+      render();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.querySelectorAll('.bg-mode-buttons button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.bg-mode-buttons button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    bgMode = btn.dataset.mode;
+    document.querySelectorAll('.bg-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('bg-' + bgMode).classList.add('active');
+    render();
+  });
+});
+
+document.getElementById('tamanoBanner').addEventListener('change', (e) => {
+  const [w, h] = e.target.value.split('x').map(Number);
+  canvas.width = w;
+  canvas.height = h;
+  render();
+});
+
+inputs.forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', render);
+  el.addEventListener('change', render);
+});
+
+document.getElementById('escalaTexto').addEventListener('input', (e) => {
+  document.getElementById('escalaValor').textContent = e.target.value + '%';
+});
+
+function luminance(hex) {
+  const r = parseInt(hex.substr(1, 2), 16), g = parseInt(hex.substr(3, 2), 16), b = parseInt(hex.substr(5, 2), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+function setStrokeForText(fontSizePx) {
+  ctx.lineWidth = Math.max(2.5, fontSizePx * 0.12);
+  ctx.lineJoin = 'round';
+  ctx.miterLimit = 2;
+}
+
+function drawText(text, x, y) {
+  ctx.strokeText(text, x, y);
+  ctx.fillText(text, x, y);
+}
+
+// Dibuja una línea que empieza por un emoji, sin aplicar el contorno al emoji
+// (el stroke sobre glifos de emoji los deja mal renderizados o invisibles)
+function drawEmojiLine(text, x, y) {
+  const spaceIdx = text.indexOf(' ');
+  if (spaceIdx === -1) { drawText(text, x, y); return; }
+  const emoji = text.slice(0, spaceIdx);
+  const rest = text.slice(spaceIdx + 1);
+  const align = ctx.textAlign;
+  if (align === 'center') {
+    const emojiW = ctx.measureText(emoji + ' ').width;
+    const restW = ctx.measureText(rest).width;
+    const startX = x - (emojiW + restW) / 2;
+    ctx.textAlign = 'left';
+    ctx.fillText(emoji, startX, y);
+    drawText(rest, startX + emojiW, y);
+    ctx.textAlign = align;
+  } else {
+    const emojiW = ctx.measureText(emoji + ' ').width;
+    ctx.fillText(emoji, x, y);
+    drawText(rest, x + emojiW, y);
+  }
+}
+
+function wrapTextCentered(text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  let lines = [];
+  for (let word of words) {
+    const testLine = line + word + ' ';
+    if (ctx.measureText(testLine).width > maxWidth && line !== '') {
+      lines.push(line);
+      line = word + ' ';
+    } else {
+      line = testLine;
+    }
+  }
+  lines.push(line);
+  lines.forEach((l, i) => drawText(l.trim(), x, y + i * lineHeight));
+  return lines.length;
+}
+
+function wrapText(text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  let lines = [];
+  for (let word of words) {
+    const testLine = line + word + ' ';
+    if (ctx.measureText(testLine).width > maxWidth && line !== '') {
+      lines.push(line);
+      line = word + ' ';
+    } else {
+      line = testLine;
+    }
+  }
+  lines.push(line);
+  lines.forEach((l, i) => ctx.fillText(l.trim(), x, y + i * lineHeight));
+  return lines.length;
+}
+
+function drawBackground(cb) {
+  const w = canvas.width, h = canvas.height;
+  if (bgMode === 'color') {
+    ctx.fillStyle = document.getElementById('colorFondo').value;
+    ctx.fillRect(0, 0, w, h);
+    cb();
+  } else if (bgMode === 'gradient') {
+    const angle = Number(document.getElementById('gradAngulo').value) * Math.PI / 180;
+    const x1 = w/2 - Math.cos(angle) * w/2;
+    const y1 = h/2 - Math.sin(angle) * h/2;
+    const x2 = w/2 + Math.cos(angle) * w/2;
+    const y2 = h/2 + Math.sin(angle) * h/2;
+    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+    grad.addColorStop(0, document.getElementById('gradColor1').value);
+    grad.addColorStop(1, document.getElementById('gradColor2').value);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    cb();
+  } else if (bgMode === 'image') {
+    if (!uploadedImage) {
+      ctx.fillStyle = '#333';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#fff';
+      ctx.font = '20px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Sube una imagen desde el panel de la izquierda', 20, 40);
+      cb();
+      return;
+    }
+    const img = uploadedImage;
+    const scale = Math.max(w / img.width, h / img.height);
+    const iw = img.width * scale, ih = img.height * scale;
+    ctx.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
+    const opacity = Number(document.getElementById('overlayOpacidad').value) / 100;
+    ctx.fillStyle = `rgba(0,0,0,${opacity})`;
+    ctx.fillRect(0, 0, w, h);
+    cb();
+  }
+}
+
+function formatFecha(isoDate) {
+  if (!isoDate) return '';
+  const [year, month, day] = isoDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const texto = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function dificultadColor(valor) {
+  if (valor <= 1.8) return '#3fb950';
+  if (valor <= 3) return '#e8912d';
+  return '#e5484d';
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function render() {
+  drawBackground(() => {
+    const w = canvas.width, h = canvas.height;
+    const textColor = document.getElementById('colorTexto').value;
+    const escala = Number(document.getElementById('escalaTexto').value) / 100;
+    const tituloSize = Number(document.getElementById('tamTitulo').value) * escala;
+    const pad = w * 0.06;
+
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = textColor;
+    const strokeColor = luminance(textColor) > 0.55 ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.65)';
+    ctx.strokeStyle = strokeColor;
+
+    // Título grande y centrado
+    ctx.font = `700 ${tituloSize}px -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    setStrokeForText(tituloSize);
+    const titulo = document.getElementById('titulo').value;
+    let y = h * 0.28;
+    const lines = wrapTextCentered(titulo, w / 2, y, w - pad * 2, tituloSize * 1.15);
+    y += lines * tituloSize * 1.15 + tituloSize * 0.7;
+
+    // Fecha / hora (con calendario) y lugar / plazas
+    const infoSize = Math.max(24, tituloSize * 0.46);
+    ctx.font = `600 ${infoSize}px -apple-system, sans-serif`;
+    setStrokeForText(infoSize);
+    const fechaRaw = document.getElementById('fecha').value;
+    const fecha = formatFecha(fechaRaw);
+    const hora = document.getElementById('hora').value;
+    const horaFin = document.getElementById('horaFin').value.trim();
+    const horaTexto = horaFin ? `${hora} a ${horaFin}` : hora;
+    const lugar = document.getElementById('lugar').value;
+    const plazas = document.getElementById('plazas').value;
+
+    const linea1 = ['📅', [fecha, horaTexto].filter(Boolean).join('  ·  ')].join(' ');
+    drawEmojiLine(linea1, w / 2, y);
+    y += infoSize * 1.6;
+
+    const linea2 = [lugar, plazas].filter(Boolean).join('   ·   ');
+    drawText(linea2, w / 2, y);
+    y += infoSize * 1.9;
+
+    // BGG dificultad y puntuación
+    const bggDificultad = parseFloat(document.getElementById('bggDificultad').value) || 0;
+    const bggPuntuacion = parseFloat(document.getElementById('bggPuntuacion').value) || 0;
+    const bggSize = Math.max(22, tituloSize * 0.4);
+    ctx.font = `600 ${bggSize}px -apple-system, sans-serif`;
+    setStrokeForText(bggSize);
+
+    const dificultadTexto = `⚙️ Dificultad BGG: ${bggDificultad.toFixed(1)}`;
+    const puntuacionTexto = `🏆 ${bggPuntuacion.toFixed(1)} / 10`;
+
+    const gap = bggSize * 1.2;
+    const w1 = ctx.measureText(dificultadTexto).width;
+    const w2 = ctx.measureText(puntuacionTexto).width;
+    const totalW = w1 + w2 + gap;
+    const startX = w / 2 - totalW / 2;
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = dificultadColor(bggDificultad);
+    drawEmojiLine(dificultadTexto, startX, y);
+    ctx.fillStyle = textColor;
+    drawEmojiLine(puntuacionTexto, startX + w1 + gap, y);
+    y += bggSize * 2;
+
+    // Notas
+    ctx.textAlign = 'center';
+    const notasSize = Math.max(18, tituloSize * 0.36);
+    ctx.font = `400 ${notasSize}px -apple-system, sans-serif`;
+    setStrokeForText(notasSize * 0.8);
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = textColor;
+    wrapTextCentered(document.getElementById('notas').value, w / 2, y, w - pad * 2, notasSize * 1.4);
+    ctx.globalAlpha = 1;
+
+    // Cajas inferiores de etiquetas
+    const chkLgtbi = document.getElementById('chkLgtbi').checked;
+    const chkNovatos = document.getElementById('chkNovatos').checked;
+    const chkMP = document.getElementById('chkMP').checked;
+    const etiquetas = [];
+    if (chkLgtbi) etiquetas.push('🏳️‍🌈 LGTBIQ Friendly');
+    if (chkNovatos) etiquetas.push('🤝 Novat@s Friendly');
+    if (chkMP) etiquetas.push('✉️ MP para apuntarte');
+
+    if (etiquetas.length > 0) {
+      const boxH = h * 0.1;
+      const boxY = h - boxH - pad * 0.7;
+      const boxGap = pad * 0.4;
+      const boxW = (w - pad * 2 - boxGap * (etiquetas.length - 1)) / etiquetas.length;
+      const boxFontSize = Math.max(20, boxH * 0.34);
+
+      ctx.textBaseline = 'middle';
+      etiquetas.forEach((texto, i) => {
+        const bx = pad + i * (boxW + boxGap);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        roundRect(bx, boxY, boxW, boxH, 10);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 1.5;
+        roundRect(bx, boxY, boxW, boxH, 10);
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.textAlign = 'center';
+        let fitSize = boxFontSize;
+        ctx.font = `600 ${fitSize}px -apple-system, sans-serif`;
+        while (ctx.measureText(texto).width > boxW - 20 && fitSize > 11) {
+          fitSize -= 1;
+          ctx.font = `600 ${fitSize}px -apple-system, sans-serif`;
+        }
+        setStrokeForText(fitSize * 0.7);
+        drawEmojiLine(texto, bx + boxW / 2, boxY + boxH / 2);
+      });
+      ctx.textBaseline = 'top';
+    }
+
+    // Borde gris elegante alrededor de todo el banner
+    const borderWidth = Math.max(4, w * 0.008);
+    ctx.strokeStyle = '#8a8a8a';
+    ctx.lineWidth = borderWidth;
+    ctx.strokeRect(borderWidth / 2, borderWidth / 2, w - borderWidth, h - borderWidth);
+  });
+}
+
+document.getElementById('descargarBtn').addEventListener('click', () => {
+  try {
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'banner-partida.png';
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    alert('No se pudo generar el PNG: ' + err.message);
+  }
+});
+
+render();
+</script>
+</body>
+</html>
