@@ -170,21 +170,18 @@
         <input type="number" id="bggPuntuacion" value="8.5" min="0" max="10" step="0.1">
       </div>
     </div>
-    <div class="row">
-      <div>
-        <label>Jugadores del juego (rango)</label>
-        <input type="text" id="rangoJugadores" value="1–4">
-      </div>
-      <div>
-        <label>Duración</label>
-        <input type="text" id="duracion" value="90–150 min">
-      </div>
-    </div>
 
     <h2 style="margin-top:20px">Etiquetas</h2>
-    <label class="check-row"><input type="checkbox" id="chkInclusivo" checked> 🌈 Ambiente inclusivo</label>
-    <label class="check-row"><input type="checkbox" id="chkNovatos" checked> 🤝 Novat@s Friendly</label>
-    <label class="check-row"><input type="checkbox" id="chkMP" checked> ✉️ MP para apuntarte</label>
+    <small>Siempre activas: cualquier partida organizada aquí es respetuosa e inclusiva.</small>
+    <label class="check-row" style="opacity:0.55" title="Siempre activo">
+      <input type="checkbox" id="chkInclusivo" checked disabled> 🌈 Ambiente inclusivo
+    </label>
+    <label class="check-row" style="opacity:0.55" title="Siempre activo">
+      <input type="checkbox" id="chkNovatos" checked disabled> 🤝 Novat@s Friendly
+    </label>
+    <label class="check-row" style="opacity:0.55" title="Siempre activo">
+      <input type="checkbox" id="chkMP" checked disabled> ✉️ MP para apuntarte
+    </label>
 
     <h2 style="margin-top:20px">Avisos</h2>
     <label class="check-row"><input type="checkbox" id="chkPuntualidad"> ⏰ Pedir puntualidad (franja destacada)</label>
@@ -271,8 +268,7 @@ const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "Inter, -apple-system, sans-serif";
 
 const inputs = ['titulo','subtitulo','descripcion','fecha','hora','horaFin','lugar','plazas',
-  'bggDificultad','bggPuntuacion','rangoJugadores','duracion',
-  'chkInclusivo','chkNovatos','chkMP','chkPuntualidad',
+  'bggDificultad','bggPuntuacion','chkPuntualidad',
   'colorFondo','gradColor1','gradColor2','gradAngulo','overlayOpacidad',
   'colorTarjeta','colorAcento','escalaTexto'];
 
@@ -385,6 +381,30 @@ function formatFecha(isoDate) {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
+function formatFechaCorta(isoDate) {
+  if (!isoDate) return '';
+  const [year, month, day] = isoDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const texto = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function sanitizeForFilename(text) {
+  return text
+    .replace(/[()[\]{}]/g, '')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildFilename() {
+  const titulo = sanitizeForFilename(document.getElementById('titulo').value) || 'Cartel';
+  const fecha = sanitizeForFilename(formatFechaCorta(document.getElementById('fecha').value));
+  const lugar = sanitizeForFilename(document.getElementById('lugar').value);
+  const parts = [titulo, fecha, lugar].filter(Boolean);
+  return parts.join(' - ') + '.png';
+}
+
 function dificultadColor(valor) {
   if (valor <= 1.8) return '#3fb950';
   if (valor <= 3) return '#e8912d';
@@ -450,14 +470,15 @@ function render() {
   ctx.restore();
 
   const innerPad = cardW * (wide ? 0.045 : 0.05);
+  const columnGap = cardW * (wide ? 0.05 : 0);
   let colLeftX, colLeftW, imgX, imgY, imgW, imgH;
 
   if (wide) {
-    colLeftW = cardW * 0.58;
+    colLeftW = cardW * 0.53;
     colLeftX = cardX + innerPad;
-    imgW = cardW * 0.34;
+    imgW = cardW - innerPad * 2 - colLeftW - columnGap;
     imgH = cardH - innerPad * 2;
-    imgX = cardX + cardW - innerPad - imgW;
+    imgX = colLeftX + colLeftW + columnGap;
     imgY = cardY + innerPad;
   } else {
     colLeftW = cardW - innerPad * 2;
@@ -481,34 +502,6 @@ function render() {
   }
 
   const bggPuntuacion = parseFloat(document.getElementById('bggPuntuacion').value) || 0;
-  const rangoJugadores = document.getElementById('rangoJugadores').value;
-  const duracion = document.getElementById('duracion').value;
-  const overlayH = imgH * 0.16;
-  const overlayGrad = ctx.createLinearGradient(0, imgY + imgH - overlayH, 0, imgY + imgH);
-  overlayGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  overlayGrad.addColorStop(1, 'rgba(0,0,0,0.72)');
-  ctx.save();
-  roundRect(imgX, imgY, imgW, imgH, cardRadius * 0.7);
-  ctx.clip();
-  ctx.fillStyle = overlayGrad;
-  ctx.fillRect(imgX, imgY + imgH - overlayH, imgW, overlayH);
-  ctx.restore();
-
-  const statSize = Math.max(13, imgW * 0.052) * escala;
-  ctx.font = `600 ${statSize}px ${SANS}`;
-  ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const stats = [];
-  if (bggPuntuacion) stats.push(`Estrella ${bggPuntuacion.toFixed(1)} BGG`.replace('Estrella', '⭐'));
-  if (rangoJugadores) stats.push(`👥 ${rangoJugadores}`);
-  if (duracion) stats.push(`⏱ ${duracion}`);
-  const statY = imgY + imgH - overlayH / 2;
-  const segW = imgW / stats.length;
-  stats.forEach((s, i) => {
-    ctx.fillText(s, imgX + segW * i + segW / 2, statY);
-  });
-  ctx.textBaseline = 'alphabetic';
 
   let y = cardY + innerPad;
   const colTextY = wide ? cardY + innerPad : imgY + imgH + innerPad * 0.8;
@@ -558,6 +551,21 @@ function render() {
   ctx.fillStyle = textDark;
   ctx.textBaseline = 'middle';
   ctx.fillText(pillText, colLeftX + pillPadX + dotR * 2 + pillSize * 0.5, y + pillH / 2 + pillSize * 0.05);
+
+  // Píldora de puntuación BGG, en la misma fila que la dificultad
+  const scoreGap = pillSize * 0.8;
+  const scoreText = `⭐ ${bggPuntuacion.toFixed(1)} / 10`;
+  const scoreTextW = ctx.measureText(scoreText).width;
+  const scorePadX = pillSize * 1.1;
+  const scoreW = scoreTextW + scorePadX * 2;
+  const scoreX = colLeftX + pillW + scoreGap;
+  ctx.fillStyle = '#f8f9fb';
+  ctx.strokeStyle = '#e8eaed';
+  roundRect(scoreX, y, scoreW, pillH, pillH / 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = textDark;
+  ctx.fillText(scoreText, scoreX + scorePadX, y + pillH / 2 + pillSize * 0.05);
   ctx.textBaseline = 'alphabetic';
   y += pillH + tituloSize * 0.5;
 
@@ -622,28 +630,33 @@ function render() {
     y += barH + descSize * 0.8;
   }
 
-  const chkInclusivo = document.getElementById('chkInclusivo').checked;
-  const chkNovatos = document.getElementById('chkNovatos').checked;
-  const chkMP = document.getElementById('chkMP').checked;
-  const tags = [];
-  if (chkInclusivo) tags.push('🌈 Ambiente inclusivo');
-  if (chkNovatos) tags.push('🤝 Novat@s Friendly');
-  if (chkMP) tags.push('✉️ MP para apuntarte');
+  // Las tres etiquetas están siempre activas: cualquier partida aquí es
+  // respetuosa, inclusiva, y se apunta siempre por MP.
+  const tags = ['🌈 Ambiente inclusivo', '🤝 Novat@s Friendly', '✉️ MP para apuntarte'];
 
-  if (tags.length > 0) {
+  {
     const tagH = valueSize * 2.1;
     const tagGap = cardW * 0.012;
-    const tagW = (colLeftW - tagGap * (tags.length - 1)) / tags.length;
+    const tagsRowW = colLeftW * 0.97; // margen de seguridad para no tocar la imagen
+    const tagW = (tagsRowW - tagGap * (tags.length - 1)) / tags.length;
     const tagFontBase = Math.max(12, cardW * 0.013) * escala;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     tags.forEach((tag, i) => {
       const tx = colLeftX + i * (tagW + tagGap);
+      ctx.save();
+      ctx.shadowColor = 'rgba(232,168,53,0.55)';
+      ctx.shadowBlur = tagH * 0.5;
+      ctx.shadowOffsetY = tagH * 0.05;
       ctx.fillStyle = '#fafbfc';
       ctx.strokeStyle = '#e8eaed';
       ctx.lineWidth = 1.5;
       roundRect(tx, y, tagW, tagH, tagH / 2);
       ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = '#e8eaed';
+      ctx.lineWidth = 1.5;
+      roundRect(tx, y, tagW, tagH, tagH / 2);
       ctx.stroke();
       let fitSize = tagFontBase;
       ctx.font = `600 ${fitSize}px ${SANS}`;
@@ -732,7 +745,7 @@ document.getElementById('descargarBtn').addEventListener('click', () => {
   try {
     const dataUrl = canvas.toDataURL('image/png');
     const link = document.createElement('a');
-    link.download = 'cartel-partida.png';
+    link.download = buildFilename();
     link.href = dataUrl;
     document.body.appendChild(link);
     link.click();
