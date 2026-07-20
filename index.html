@@ -51,9 +51,9 @@
   textarea { resize: vertical; min-height: 60px; }
   .row { display: flex; gap: 10px; }
   .row > div { flex: 1; }
-  .bg-mode-buttons { display: flex; gap: 6px; margin-bottom: 10px; }
+  .bg-mode-buttons { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
   .bg-mode-buttons button {
-    flex: 1;
+    flex: 1 1 auto;
     padding: 8px;
     border-radius: 6px;
     border: 1px solid #444;
@@ -85,6 +85,7 @@
     background: repeating-conic-gradient(#333 0% 25%, #2a2a2a 0% 50%) 50% / 20px 20px;
   }
   .canvas-wrap { flex: 1 1 560px; display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 640px; }
+  .download-buttons-container { display: flex; gap: 10px; width: 100%; }
   button.main-btn {
     padding: 12px 24px;
     border-radius: 8px;
@@ -94,7 +95,7 @@
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    width: 100%;
+    flex: 1;
   }
   button.main-btn:hover { background: #3a6ce0; }
   button.secondary-btn {
@@ -208,6 +209,7 @@
       <button type="button" data-mode="gradient" class="active">Degradado</button>
       <button type="button" data-mode="color">Color sólido</button>
       <button type="button" data-mode="image">Imagen</button>
+      <button type="button" data-mode="transparent">Transparente</button>
     </div>
 
     <div class="bg-section" id="bg-color">
@@ -266,7 +268,10 @@
   <div class="canvas-wrap panel">
     <h2>Vista previa</h2>
     <canvas id="canvas" width="1080" height="1350"></canvas>
-    <button class="main-btn" id="descargarBtn">Descargar PNG</button>
+    <div class="download-buttons-container">
+      <button class="main-btn" id="descargarBtn">Descargar PNG</button>
+      <button class="main-btn" id="descargarWebpBtn" style="background: #10b981;">Descargar WebP</button>
+    </div>
   </div>
 </div>
 
@@ -315,7 +320,8 @@ document.querySelectorAll('.bg-mode-buttons button').forEach(btn => {
     btn.classList.add('active');
     bgMode = btn.dataset.mode;
     document.querySelectorAll('.bg-section').forEach(s => s.classList.remove('active'));
-    document.getElementById('bg-' + bgMode).classList.add('active');
+    const sec = document.getElementById('bg-' + bgMode);
+    if (sec) sec.classList.add('active');
     render();
   });
 });
@@ -407,12 +413,12 @@ function sanitizeForFilename(text) {
     .trim();
 }
 
-function buildFilename() {
+function buildFilename(extension) {
   const titulo = sanitizeForFilename(document.getElementById('titulo').value) || 'Cartel';
   const fecha = sanitizeForFilename(formatFechaCorta(document.getElementById('fecha').value));
   const lugar = sanitizeForFilename(document.getElementById('lugar').value);
   const parts = [titulo, fecha, lugar].filter(Boolean);
-  return parts.join(' - ') + '.png';
+  return parts.join(' - ') + '.' + extension;
 }
 
 function dificultadColor(valor) {
@@ -448,6 +454,8 @@ function drawOuterBackground() {
       ctx.fillStyle = '#2a2a2d';
       ctx.fillRect(0, 0, w, h);
     }
+  } else if (bgMode === 'transparent') {
+    // No dibujamos nada. Mantiene la transparencia generada por clearRect().
   }
 }
 
@@ -632,12 +640,10 @@ function render() {
   const gridColW = colLeftW / 2;
   const singleRowH = labelSize + labelValueGap + valueSize;
 
-  // --- MODIFICADO: Alineación y cálculo centrado para los textos del grid ---
   ctx.textAlign = 'center'; 
 
   gridItems.forEach(([label, value], i) => {
     const col = i % 2, row = Math.floor(i / 2);
-    // Calculamos el punto de origen en el centro exacto de cada columna
     const gx = colLeftX + col * gridColW + (gridColW / 2);
     const gy = y + row * (singleRowH + rowGap);
     
@@ -650,9 +656,8 @@ function render() {
     ctx.fillText(value, gx, gy + labelSize + labelValueGap + valueSize);
   });
   
-  ctx.textAlign = 'left'; // Restauramos la alineación base por seguridad
+  ctx.textAlign = 'left'; 
 
-  // Sumamos la altura real del contenido del grid y añadimos el padding simétrico final
   const totalGridH = (singleRowH * 2) + rowGap;
   y += totalGridH + paddingLineas;
 
@@ -666,7 +671,7 @@ function render() {
   
   y += descSize * 1.2;
 
-  // --- Cálculo de bloques inferiores pegados al fondo de la tarjeta ---
+  // --- Cálculo de bloques inferiores ---
   const tags = ['🌈 Ambiente inclusivo', '🤝 Novat@s Friendly', '✉️ MP para pedir plaza'];
   const tagH = valueSize * 2.3;
   const barH = valueSize * 2.4;
@@ -750,9 +755,8 @@ function serializeConfig() {
   return config;
 }
 
-// Resto de funciones auxiliares intactas
 function saveConfig() { try { const config = serializeConfig(); localStorage.setItem('cartelPartidaConfig', JSON.stringify(config)); } catch (e) { console.warn(e); } }
-function applyConfigObject(config) { inputs.forEach(id => { if (!(id in config)) return; const el = document.getElementById(id); if (el.type === 'checkbox') el.checked = config[id]; else el.value = config[id]; }); if (config.tamanoBanner) { document.getElementById('tamanoBanner').value = config.tamanoBanner; const [w, h] = config.tamanoBanner.split('x').map(Number); canvas.width = w; canvas.height = h; } if (config.bgMode) { bgMode = config.bgMode; document.querySelectorAll('.bg-mode-buttons button').forEach(b => { b.classList.toggle('active', b.dataset.mode === bgMode); }); document.querySelectorAll('.bg-section').forEach(s => s.classList.remove('active')); document.getElementById('bg-' + bgMode).classList.add('active'); } document.getElementById('escalaValor').textContent = document.getElementById('escalaTexto').value + '%'; let imagesToLoad = 0; if (config.portadaSrc) imagesToLoad++; if (config.fondoSrc) imagesToLoad++; if (imagesToLoad === 0) { render(); return; } let loaded = 0; const done = () => { if (++loaded === imagesToLoad) render(); }; if (config.portadaSrc) { const img = new Image(); img.onload = () => { portadaImage = img; document.getElementById('imagenPortadaNombre').textContent = 'Fichero cargado'; done(); }; img.src = config.portadaSrc; } else { portadaImage = null; document.getElementById('imagenPortadaNombre').textContent = ''; } if (config.fondoSrc) { const img = new Image(); img.onload = () => { fondoImage = img; document.getElementById('imagenFondoNombre').textContent = 'Fichero cargado'; done(); }; img.src = config.fondoSrc; } else { fondoImage = null; document.getElementById('imagenFondoNombre').textContent = ''; } }
+function applyConfigObject(config) { inputs.forEach(id => { if (!(id in config)) return; const el = document.getElementById(id); if (el.type === 'checkbox') el.checked = config[id]; else el.value = config[id]; }); if (config.tamanoBanner) { document.getElementById('tamanoBanner').value = config.tamanoBanner; const [w, h] = config.tamanoBanner.split('x').map(Number); canvas.width = w; canvas.height = h; } if (config.bgMode) { bgMode = config.bgMode; document.querySelectorAll('.bg-mode-buttons button').forEach(b => { b.classList.toggle('active', b.dataset.mode === bgMode); }); document.querySelectorAll('.bg-section').forEach(s => s.classList.remove('active')); const sec = document.getElementById('bg-' + bgMode); if (sec) sec.classList.add('active'); } document.getElementById('escalaValor').textContent = document.getElementById('escalaTexto').value + '%'; let imagesToLoad = 0; if (config.portadaSrc) imagesToLoad++; if (config.fondoSrc) imagesToLoad++; if (imagesToLoad === 0) { render(); return; } let loaded = 0; const done = () => { if (++loaded === imagesToLoad) render(); }; if (config.portadaSrc) { const img = new Image(); img.onload = () => { portadaImage = img; document.getElementById('imagenPortadaNombre').textContent = 'Fichero cargado'; done(); }; img.src = config.portadaSrc; } else { portadaImage = null; document.getElementById('imagenPortadaNombre').textContent = ''; } if (config.fondoSrc) { const img = new Image(); img.onload = () => { fondoImage = img; document.getElementById('imagenFondoNombre').textContent = 'Fichero cargado'; done(); }; img.src = config.fondoSrc; } else { fondoImage = null; document.getElementById('imagenFondoNombre').textContent = ''; } }
 function loadConfig() { const raw = localStorage.getItem('cartelPartidaConfig'); if (!raw) return; try { applyConfigObject(JSON.parse(raw)); } catch (e) { console.warn(e); } }
 
 // ---------- Gestión de Proyectos (JSON) ----------
@@ -760,7 +764,35 @@ document.getElementById('btnNuevo').addEventListener('click', () => { if (confir
 document.getElementById('btnGrabar').addEventListener('click', () => { const config = serializeConfig(); const jsonString = JSON.stringify(config, null, 2); const blob = new Blob([jsonString], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); const juego = sanitizeForFilename(document.getElementById('titulo').value) || 'Proyecto'; link.download = `${juego}.json`; link.href = url; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); });
 const jsonFileInput = document.getElementById('jsonFileInput'); document.getElementById('btnCargar').addEventListener('click', () => jsonFileInput.click()); jsonFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { try { const config = JSON.parse(ev.target.result); applyConfigObject(config); jsonFileInput.value = ''; } catch (err) { alert('Error al leer el archivo JSON: ' + err.message); } }; reader.readAsText(file); });
 document.getElementById('resetConfigBtn').addEventListener('click', () => { if (confirm('¿Restablecer todos los valores por defecto? Se borrará el almacenamiento local.')) { localStorage.removeItem('cartelPartidaConfig'); location.reload(); } });
-document.getElementById('descargarBtn').addEventListener('click', () => { try { const dataUrl = canvas.toDataURL('image/png'); const link = document.createElement('a'); link.download = buildFilename(); link.href = dataUrl; document.body.appendChild(link); link.click(); document.body.removeChild(link); } catch (err) { alert('No se pudo generar el PNG: ' + err.message); } });
+
+// ---------- Descargas ----------
+document.getElementById('descargarBtn').addEventListener('click', () => {
+  try {
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = buildFilename('png');
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    alert('No se pudo generar el PNG: ' + err.message);
+  }
+});
+
+document.getElementById('descargarWebpBtn').addEventListener('click', () => {
+  try {
+    const dataUrl = canvas.toDataURL('image/webp', 0.92);
+    const link = document.createElement('a');
+    link.download = buildFilename('webp');
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    alert('No se pudo generar el WebP: ' + err.message);
+  }
+});
 
 // ---------- Arranque ----------
 loadConfig();
