@@ -6,7 +6,7 @@
 <title>Generador de carteles para partidas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   body {
@@ -291,7 +291,7 @@ let bgMode = 'gradient';
 let portadaImage = null;
 let fondoImage = null;
 
-// ---------- Carga de imagenes ----------
+// ---------- Carga de imágenes ----------
 function loadImageFile(inputId, nombreId, onLoaded) {
   document.getElementById(inputId).addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -472,7 +472,7 @@ function render() {
   drawOuterBackground();
 
   const wide = (w / h) > 1.25;
-  const outerPad = w * 0.045;
+  const outerPad = w * 0.055;
   const cardX = outerPad, cardY = outerPad;
   const cardW = w - outerPad * 2, cardH = h - outerPad * 2;
   const cardRadius = w * 0.022;
@@ -502,9 +502,9 @@ function render() {
     colLeftW = cardW - innerPad * 2;
     colLeftX = cardX + innerPad;
     imgW = colLeftW;
-    imgH = cardH * 0.43; // Imagen con mayor espacio vertical
+    imgH = cardH * 0.43; 
     imgX = colLeftX;
-    imgY = cardY + innerPad * 1.3;
+    imgY = cardY + innerPad * 1.35;
   }
 
   // Dibujar la portada / recuadro del juego
@@ -522,62 +522,33 @@ function render() {
 
   // --- Pastilla Superior "PROPUESTA DE PARTIDA" ---
   const topBadgeText = "PROPUESTA DE PARTIDA";
-  const topBadgeSize = Math.max(12, cardW * 0.016) * escala;
-  ctx.font = `700 ${topBadgeSize}px ${SANS}`;
-  const topBadgePadX = topBadgeSize * 1.2;
+  const topBadgeSize = Math.max(14, cardW * 0.019) * escala * 1.5;
+  ctx.font = `800 ${topBadgeSize}px ${SANS}`;
+  const topBadgePadX = topBadgeSize * 1.8;
   const topBadgeW = ctx.measureText(topBadgeText).width + topBadgePadX * 2;
-  const topBadgeH = topBadgeSize * 2.1;
+  const topBadgeH = topBadgeSize * 2.2;
   const topBadgeX = cardX + (cardW - topBadgeW) / 2;
-  const topBadgeY = cardY + innerPad * 0.35;
+  const topBadgeY = cardY - (topBadgeH / 2);
 
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.12)';
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetY = 3;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
-  ctx.lineWidth = 1.5;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 4;
+  ctx.fillStyle = '#fff0e6'; 
+  ctx.strokeStyle = '#ffd8be';
+  ctx.lineWidth = 2.5;
   roundRect(topBadgeX, topBadgeY, topBadgeW, topBadgeH, topBadgeH / 2);
   ctx.fill();
   ctx.stroke();
-  ctx.fillStyle = textDark;
+
+  ctx.fillStyle = '#c2410c'; 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(topBadgeText, cardX + cardW / 2, topBadgeY + topBadgeH / 2 + topBadgeSize * 0.05);
+  ctx.fillText(topBadgeText, cardX + cardW / 2, topBadgeY + topBadgeH / 2 + topBadgeSize * 0.04);
   ctx.restore();
   ctx.textBaseline = 'alphabetic';
 
-  // --- Título flotante encima de la imagen ---
-  const tituloText = document.getElementById('titulo').value;
-  if (tituloText) {
-    const tituloSize = (wide ? Math.max(32, cardW * 0.065) : Math.max(46, cardW * 0.088)) * escala;
-    ctx.font = `700 ${tituloSize}px ${SERIF}`;
-    
-    const titlePadding = imgW * 0.045;
-    const titleX = imgX + titlePadding;
-    const maxTitleW = imgW * 0.55; 
-
-    const titleLines = getWrappedLines(tituloText, maxTitleW);
-    const lineH = tituloSize * 0.95;
-    const titleBlockH = titleLines.length * lineH;
-    const titleY = imgY + imgH - titlePadding - (titleBlockH - lineH);
-
-    ctx.save();
-    // Sombras múltiples ligeras / gris claro para garantizar legibilidad óptima
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 2;
-    ctx.fillStyle = textDark;
-    ctx.textAlign = 'left';
-
-    titleLines.forEach((line, i) => {
-      ctx.fillText(line, titleX, titleY + i * lineH);
-    });
-    ctx.restore();
-  }
-
-  // --- Pastillas BGG superpuestas ---
+  // --- Pastillas BGG superpuestas (Esquina Superior Derecha de la Imagen) ---
   const bggDificultad = parseFloat(document.getElementById('bggDificultad').value) || 0;
   const bggPuntuacion = parseFloat(document.getElementById('bggPuntuacion').value) || 0;
 
@@ -597,10 +568,10 @@ function render() {
   const sPillW = scoreTextW + oPillPadX * 2;
   const oPillH = overlayPillSize * 2.2;
 
-  const imgMargin = overlayPillSize * 0.8;
+  const imgMargin = overlayPillSize * 0.9;
   const scoreX = imgX + imgW - imgMargin - sPillW;
   const diffX = scoreX - overlayPillSize * 0.6 - dPillW;
-  const pillsY = imgY + imgH - imgMargin - oPillH;
+  const pillsY = imgY + imgMargin; 
 
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.2)';
@@ -632,6 +603,49 @@ function render() {
   ctx.fillText(scoreText, scoreX + oPillPadX, pillsY + oPillH / 2 + overlayPillSize * 0.05);
   ctx.restore();
   ctx.textBaseline = 'alphabetic';
+
+  // --- Título flotante encima de la imagen (Con sangrado a la derecha) ---
+  const tituloText = document.getElementById('titulo').value;
+  if (tituloText) {
+    const tituloSize = (wide ? Math.max(34, cardW * 0.07) : Math.max(52, cardW * 0.098)) * escala;
+    ctx.font = `700 ${tituloSize}px ${SERIF}`;
+    
+    // Sangrado interno para distanciar la sombra del borde izquierdo de la imagen
+    const titlePadding = imgW * 0.045;
+    const titleX = imgX + titlePadding;
+    const maxTitleW = imgW * 0.88; 
+
+    const titleLines = getWrappedLines(tituloText, maxTitleW);
+    const lineH = tituloSize * 0.95;
+    const titleBlockH = titleLines.length * lineH;
+    const titleY = imgY + imgH - titlePadding - (titleBlockH - lineH);
+
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.lineWidth = tituloSize * 0.16;
+    
+    ctx.shadowColor = 'rgba(255, 255, 255, 1)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    ctx.textAlign = 'left';
+
+    titleLines.forEach((line, i) => {
+      ctx.strokeText(line, titleX, titleY + i * lineH);
+      ctx.fillText(line, titleX, titleY + i * lineH);
+    });
+
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = textDark;
+    titleLines.forEach((line, i) => {
+      ctx.fillText(line, titleX, titleY + i * lineH);
+    });
+
+    ctx.restore();
+  }
 
   // --- Bloque de Texto Central (Subtítulo + Descripción) ---
   let y = wide ? cardY + innerPad : imgY + imgH + innerPad * 0.8;
@@ -846,7 +860,7 @@ document.getElementById('descargarWebpBtn').addEventListener('click', () => {
 
 // ---------- Arranque ----------
 loadConfig();
-if (document.fonts && document.fonts.load) { Promise.all([ document.fonts.load("700 40px 'Cormorant Garamond'"), document.fonts.load("400 16px 'Inter'"), document.fonts.load("600 16px 'Inter'"), document.fonts.load("700 16px 'Inter'") ]).then(render).catch(render); }
+if (document.fonts && document.fonts.load) { Promise.all([ document.fonts.load("700 40px 'Cormorant Garamond'"), document.fonts.load("400 16px 'Inter'"), document.fonts.load("600 16px 'Inter'"), document.fonts.load("700 16px 'Inter'"), document.fonts.load("800 16px 'Inter'") ]).then(render).catch(render); }
 render();
 </script>
 </body>
