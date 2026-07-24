@@ -6,7 +6,7 @@
 <title>Generador de carteles para partidas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   body {
@@ -251,8 +251,8 @@
         <input type="color" id="colorAcento" value="#d8b15a">
       </div>
     </div>
-    <label style="margin-top:14px">Escala general del texto: <span id="escalaValor">100%</span></label>
-    <input type="range" id="escalaTexto" min="60" max="160" value="100" step="5">
+    <label style="margin-top:14px">Escala general del texto: <span id="escalaValor">115%</span></label>
+    <input type="range" id="escalaTexto" min="60" max="160" value="115" step="5">
 
     <h2 style="margin-top:20px">Tamaño del cartel</h2>
     <select id="tamanoBanner" class="size-select">
@@ -455,7 +455,7 @@ function drawOuterBackground() {
       ctx.fillRect(0, 0, w, h);
     }
   } else if (bgMode === 'transparent') {
-    // No dibujamos nada. Mantiene la transparencia generada por clearRect().
+    // Transparencia por clearRect()
   }
 }
 
@@ -464,7 +464,6 @@ function render() {
   const w = canvas.width, h = canvas.height;
   const escala = Number(document.getElementById('escalaTexto').value) / 100;
   const cardColor = document.getElementById('colorTarjeta').value;
-  const accentColor = document.getElementById('colorAcento').value;
   const textDark = '#1b1e23';
   const textSoft = '#667085';
   const textBody = '#495363';
@@ -478,6 +477,7 @@ function render() {
   const cardW = w - outerPad * 2, cardH = h - outerPad * 2;
   const cardRadius = w * 0.022;
 
+  // Fondo Tarjeta Principal
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.35)';
   ctx.shadowBlur = w * 0.03;
@@ -502,9 +502,9 @@ function render() {
     colLeftW = cardW - innerPad * 2;
     colLeftX = cardX + innerPad;
     imgW = colLeftW;
-    imgH = cardH * 0.36;
+    imgH = cardH * 0.43; // Imagen con mayor espacio vertical
     imgX = colLeftX;
-    imgY = cardY + innerPad;
+    imgY = cardY + innerPad * 1.3;
   }
 
   // Dibujar la portada / recuadro del juego
@@ -518,6 +518,63 @@ function render() {
     ctx.font = `${16 * escala}px ${SANS}`;
     ctx.textAlign = 'center';
     ctx.fillText('Sube la portada del juego', imgX + imgW / 2, imgY + imgH / 2);
+  }
+
+  // --- Pastilla Superior "PROPUESTA DE PARTIDA" ---
+  const topBadgeText = "PROPUESTA DE PARTIDA";
+  const topBadgeSize = Math.max(12, cardW * 0.016) * escala;
+  ctx.font = `700 ${topBadgeSize}px ${SANS}`;
+  const topBadgePadX = topBadgeSize * 1.2;
+  const topBadgeW = ctx.measureText(topBadgeText).width + topBadgePadX * 2;
+  const topBadgeH = topBadgeSize * 2.1;
+  const topBadgeX = cardX + (cardW - topBadgeW) / 2;
+  const topBadgeY = cardY + innerPad * 0.35;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.12)';
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 3;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+  ctx.lineWidth = 1.5;
+  roundRect(topBadgeX, topBadgeY, topBadgeW, topBadgeH, topBadgeH / 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = textDark;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(topBadgeText, cardX + cardW / 2, topBadgeY + topBadgeH / 2 + topBadgeSize * 0.05);
+  ctx.restore();
+  ctx.textBaseline = 'alphabetic';
+
+  // --- Título flotante encima de la imagen ---
+  const tituloText = document.getElementById('titulo').value;
+  if (tituloText) {
+    const tituloSize = (wide ? Math.max(32, cardW * 0.065) : Math.max(46, cardW * 0.088)) * escala;
+    ctx.font = `700 ${tituloSize}px ${SERIF}`;
+    
+    const titlePadding = imgW * 0.045;
+    const titleX = imgX + titlePadding;
+    const maxTitleW = imgW * 0.55; 
+
+    const titleLines = getWrappedLines(tituloText, maxTitleW);
+    const lineH = tituloSize * 0.95;
+    const titleBlockH = titleLines.length * lineH;
+    const titleY = imgY + imgH - titlePadding - (titleBlockH - lineH);
+
+    ctx.save();
+    // Sombras múltiples ligeras / gris claro para garantizar legibilidad óptima
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = textDark;
+    ctx.textAlign = 'left';
+
+    titleLines.forEach((line, i) => {
+      ctx.fillText(line, titleX, titleY + i * lineH);
+    });
+    ctx.restore();
   }
 
   // --- Pastillas BGG superpuestas ---
@@ -576,37 +633,30 @@ function render() {
   ctx.restore();
   ctx.textBaseline = 'alphabetic';
 
-  // --- Bloque de Texto Central ---
+  // --- Bloque de Texto Central (Subtítulo + Descripción) ---
   let y = wide ? cardY + innerPad : imgY + imgH + innerPad * 0.8;
-  y += cardH * 0.01;
 
-  const tituloSize = (wide ? Math.max(30, cardW * 0.062) : Math.max(42, cardW * 0.082)) * escala;
   const subSize = (wide ? Math.max(14, cardW * 0.0165) : Math.max(18, cardW * 0.024)) * escala;
   const descSize = (wide ? Math.max(14, cardW * 0.0155) : Math.max(18, cardW * 0.023)) * escala;
 
-  // Título
-  ctx.font = `600 ${tituloSize}px ${SERIF}`;
-  ctx.fillStyle = textDark;
-  ctx.textAlign = 'left';
-  const tituloLines = drawWrappedText(document.getElementById('titulo').value, colLeftX, y + tituloSize * 0.85, colLeftW, tituloSize * 0.98);
-  y += tituloLines * tituloSize * 0.98 + tituloSize * 0.35;
-
   // Subtítulo
-  ctx.font = `400 ${subSize}px ${SANS}`;
-  ctx.fillStyle = textSoft;
   const subtitulo = document.getElementById('subtitulo').value;
   if (subtitulo) {
-    const subLines = drawWrappedText(subtitulo, colLeftX, y + subSize, colLeftW, subSize * 1.5);
-    y += subLines * subSize * 1.5 + subSize * 0.9;
+    ctx.font = `600 ${subSize}px ${SANS}`;
+    ctx.fillStyle = textSoft;
+    ctx.textAlign = 'left';
+    const subLines = drawWrappedText(subtitulo, colLeftX, y + subSize, colLeftW, subSize * 1.4);
+    y += subLines * subSize * 1.4 + subSize * 0.7;
   }
 
   // Descripción
   ctx.font = `400 ${descSize}px ${SANS}`;
   ctx.fillStyle = textBody;
-  const descLines = drawWrappedText(document.getElementById('descripcion').value, colLeftX, y + descSize, colLeftW, descSize * 1.65);
-  y += descLines * descSize * 1.65 + descSize * 1.1;
+  ctx.textAlign = 'left';
+  const descLines = drawWrappedText(document.getElementById('descripcion').value, colLeftX, y + descSize, colLeftW, descSize * 1.55);
+  y += descLines * descSize * 1.55 + descSize * 0.9;
 
-  // Primera línea divisoria (Arriba del grid)
+  // Primera línea divisoria
   ctx.strokeStyle = '#e8eaed';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -614,7 +664,7 @@ function render() {
   ctx.lineTo(colLeftX + colLeftW, y);
   ctx.stroke();
 
-  // --- Configuración de escala y espaciado del grid ---
+  // --- Grid de Información ---
   const labelSize = (wide ? Math.max(11, cardW * 0.012) : Math.max(15, cardW * 0.019)) * escala;
   const valueSize = (wide ? Math.max(16, cardW * 0.0195) : Math.max(22, cardW * 0.028)) * escala;
 
@@ -661,7 +711,7 @@ function render() {
   const totalGridH = (singleRowH * 2) + rowGap;
   y += totalGridH + paddingLineas;
 
-  // Segunda línea divisoria (Debajo del grid)
+  // Segunda línea divisoria
   ctx.strokeStyle = '#e8eaed';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -669,9 +719,9 @@ function render() {
   ctx.lineTo(colLeftX + colLeftW, y);
   ctx.stroke();
   
-  y += descSize * 1.2;
+  y += descSize * 1.0;
 
-  // --- Cálculo de bloques inferiores ---
+  // --- Bloques Inferiores ---
   const tags = ['🌈 Ambiente inclusivo', '🤝 Novat@s Friendly', '✉️ MP para pedir plaza'];
   const tagH = valueSize * 2.3;
   const barH = valueSize * 2.4;
@@ -760,7 +810,7 @@ function applyConfigObject(config) { inputs.forEach(id => { if (!(id in config))
 function loadConfig() { const raw = localStorage.getItem('cartelPartidaConfig'); if (!raw) return; try { applyConfigObject(JSON.parse(raw)); } catch (e) { console.warn(e); } }
 
 // ---------- Gestión de Proyectos (JSON) ----------
-document.getElementById('btnNuevo').addEventListener('click', () => { if (confirm('¿Seguro que quieres empezar un cartel nuevo? Se perderán los cambios que no hayas guardado.')) { localStorage.removeItem('cartelPartidaConfig'); document.getElementById('titulo').value = 'Nuevo Juego'; document.getElementById('subtitulo').value = 'Escribe aquí un subtítulo breve del juego.'; document.getElementById('descripcion').value = 'Explicación de la partida o ambientación rápida. Te enseñamos las reglas paso a paso.'; document.getElementById('fecha').value = new Date().toISOString().split('T')[0]; document.getElementById('hora').value = '17:00'; document.getElementById('horaFin').value = '21:00'; document.getElementById('lugar').value = 'La Forja (Mieres)'; document.getElementById('plazas').value = '4 jugadores'; document.getElementById('bggDificultad').value = '2.5'; document.getElementById('bggPuntuacion').value = '7.5'; document.getElementById('chkPuntualidad').checked = false; document.getElementById('escalaTexto').value = '100'; document.getElementById('escalaValor').textContent = '100%'; portadaImage = null; fondoImage = null; document.getElementById('imagenPortadaNombre').textContent = ''; document.getElementById('imagenFondoNombre').textContent = ''; document.getElementById('imagenPortadaArchivo').value = ''; document.getElementById('imagenFondoArchivo').value = ''; document.getElementById('tamanoBanner').value = '1080x1350'; canvas.width = 1080; canvas.height = 1350; render(); } });
+document.getElementById('btnNuevo').addEventListener('click', () => { if (confirm('¿Seguro que quieres empezar un cartel nuevo? Se perderán los cambios que no hayas guardado.')) { localStorage.removeItem('cartelPartidaConfig'); document.getElementById('titulo').value = 'Nuevo Juego'; document.getElementById('subtitulo').value = 'Escribe aquí un subtítulo breve del juego.'; document.getElementById('descripcion').value = 'Explicación de la partida o ambientación rápida. Te enseñamos las reglas paso a paso.'; document.getElementById('fecha').value = new Date().toISOString().split('T')[0]; document.getElementById('hora').value = '17:00'; document.getElementById('horaFin').value = '21:00'; document.getElementById('lugar').value = 'La Forja (Mieres)'; document.getElementById('plazas').value = '4 jugadores'; document.getElementById('bggDificultad').value = '2.5'; document.getElementById('bggPuntuacion').value = '7.5'; document.getElementById('chkPuntualidad').checked = false; document.getElementById('escalaTexto').value = '115'; document.getElementById('escalaValor').textContent = '115%'; portadaImage = null; fondoImage = null; document.getElementById('imagenPortadaNombre').textContent = ''; document.getElementById('imagenFondoNombre').textContent = ''; document.getElementById('imagenPortadaArchivo').value = ''; document.getElementById('imagenFondoArchivo').value = ''; document.getElementById('tamanoBanner').value = '1080x1350'; canvas.width = 1080; canvas.height = 1350; render(); } });
 document.getElementById('btnGrabar').addEventListener('click', () => { const config = serializeConfig(); const jsonString = JSON.stringify(config, null, 2); const blob = new Blob([jsonString], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); const juego = sanitizeForFilename(document.getElementById('titulo').value) || 'Proyecto'; link.download = `${juego}.json`; link.href = url; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); });
 const jsonFileInput = document.getElementById('jsonFileInput'); document.getElementById('btnCargar').addEventListener('click', () => jsonFileInput.click()); jsonFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { try { const config = JSON.parse(ev.target.result); applyConfigObject(config); jsonFileInput.value = ''; } catch (err) { alert('Error al leer el archivo JSON: ' + err.message); } }; reader.readAsText(file); });
 document.getElementById('resetConfigBtn').addEventListener('click', () => { if (confirm('¿Restablecer todos los valores por defecto? Se borrará el almacenamiento local.')) { localStorage.removeItem('cartelPartidaConfig'); location.reload(); } });
@@ -796,7 +846,7 @@ document.getElementById('descargarWebpBtn').addEventListener('click', () => {
 
 // ---------- Arranque ----------
 loadConfig();
-if (document.fonts && document.fonts.load) { Promise.all([ document.fonts.load("600 40px 'Cormorant Garamond'"), document.fonts.load("400 16px 'Inter'"), document.fonts.load("600 16px 'Inter'"), document.fonts.load("700 16px 'Inter'") ]).then(render).catch(render); }
+if (document.fonts && document.fonts.load) { Promise.all([ document.fonts.load("700 40px 'Cormorant Garamond'"), document.fonts.load("400 16px 'Inter'"), document.fonts.load("600 16px 'Inter'"), document.fonts.load("700 16px 'Inter'") ]).then(render).catch(render); }
 render();
 </script>
 </body>
