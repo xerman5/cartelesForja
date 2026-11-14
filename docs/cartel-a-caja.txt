@@ -81,8 +81,26 @@ el título. Aparece un aviso si queda demasiado pequeño.
 También puedes elegir altura «Manual» y reservar entre el 18 % y el 42 % del
 cartel. La selección automática o manual se guarda con el proyecto.
 
+En «Posición de la información» puedes elegir «Dentro del cartel» o «Anexo pegado
+debajo». Dentro, los datos comparten la altura del formato elegido con el título.
+Como anexo, la caja ocupa todo el ancho y se pega al borde inferior, sin hueco;
+el título conserva toda la altura de su formato. El anexo mantiene márgenes
+interiores y crece con la información. Si está vacío, no añade altura.
+
+La vista previa y las descargas PNG/SVG incluyen el anexo: el ancho no cambia y
+la altura total aumenta. La resolución indica las dimensiones finales, incluido
+el anexo. La posición se conserva al recargar y al guardar o abrir un JSON.
+Los proyectos anteriores utilizan la posición «Dentro del cartel».
+
 Las otras disposiciones (esquinas, etiqueta y franja) utilizan fecha, hora, lugar
 y contacto. Los campos adicionales se conservan al cambiar de disposición.
+Las dos columnas se centran como un bloque: su ancho se calcula a partir del
+contenido de cada columna, conservando la alineación del texto a la izquierda.
+La separación mínima es el 6 % del ancho del cartel o dos veces el tamaño del
+texto, lo que sea mayor. Los textos largos se ajustan antes de invadir ese espacio.
+El contacto y las descripciones cortas se alinean con ese bloque; los textos más
+largos disponen de su propio ancho centrado. Se aplica tanto dentro del cartel
+como en el anexo.
 Los datos y el diseño se guardan con el proyecto y se incluyen en PNG y SVG.
 
 El cartel queda fijo a la derecha; en móvil aparece antes de los controles.
@@ -139,8 +157,32 @@ para mostrarlo. En el PNG sale con su tamaño real.
 PAPEL Y PEGADO
 --------------
 
+Las muestras ofrecen trece combinaciones de papel y tinta. Al pasar el ratón
+sobre cada una se muestran su nombre y los códigos de color.
+«Invertir papel y tinta» intercambia los dos colores actuales, tanto si proceden
+de una muestra como si los has elegido manualmente. Pulsa de nuevo para volver.
+El resultado se guarda y exporta con el cartel.
+
+Las seis incorporaciones son:
+  Malva / mostaza · OATH     #794C61 / #D2AD43 (aproximación a la referencia)
+  Cobalto / mandarina        #1739B5 / #FFD07A
+  Menta / índigo             #BDE8D0 / #382278
+  Albaricoque / petróleo     #FFC08A / #064F4A
+  Rosa / frambuesa           #F4B8CE / #7B173E
+  Cacao / celeste            #49332C / #9DDFEA
+
+Referencias de color consultadas para la selección y adaptación de tonos:
+https://colorhunt.co/palettes/pink-orange
+https://colorhunt.co/palettes/blue-brown
+https://colordrop.io/palette/1121
+
 Imagen: una foto o textura que hace de papel, por encima del color del papel y por
 debajo del texto. Opacidad de 0 a 100; cubre todo el cartel o se muestra entera.
+«Zoom de la imagen» permite reducirla hasta el 10 % o ampliarla hasta el 500 %,
+siempre desde el centro y conservando sus proporciones. Cada imagen nueva empieza
+al 100 %. «Restablecer zoom al 100 %» vuelve al encaje inicial. El espacio libre
+muestra el color del papel; lo que excede el cartel se recorta, sin invadir el anexo.
+El zoom se conserva al recargar y al guardar o abrir un JSON, y se aplica al PNG y SVG.
 
 Pegado: las arrugas del papel encolado en la pared.
   Semilla            Cada número da un juego de arrugas distinto. "Otra" elige uno al azar.

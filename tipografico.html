@@ -286,6 +286,7 @@ Traffic</textarea>
         <div class="field">
           <span class="hint">Combinaciones de papel y tinta</span>
           <div class="swatches" id="swatches"></div>
+          <button type="button" class="btn" id="invertColors" style="align-self:flex-start">Invertir papel y tinta</button>
         </div>
         <div class="row" style="align-items:center">
           <span class="colorline"><input type="color" id="bgc" value="#7e918a" aria-label="Color del papel"><label for="bgc">Papel</label></span>
@@ -301,6 +302,10 @@ Traffic</textarea>
           <div class="field" id="bgCtrls" hidden>
             <div class="row"><label for="bgOp">Opacidad</label><output id="bgOpOut"></output></div>
             <input type="range" id="bgOp" min="0" max="100" value="100">
+            <div class="row"><label for="bgZoom">Zoom de la imagen</label><output id="bgZoomOut" for="bgZoom">100 %</output></div>
+            <input type="range" id="bgZoom" min="10" max="500" step="5" value="100" aria-describedby="bgZoomHelp">
+            <p class="hint" id="bgZoomHelp">Por debajo del 100 % se reduce; por encima se amplía y recorta desde el centro. El espacio libre muestra el color del papel.</p>
+            <button type="button" class="linkbtn" id="bgZoomReset">Restablecer zoom al 100 %</button>
             <div class="resrow">
               <label for="bgFit" class="sr">Encaje</label>
               <select id="bgFit">
@@ -388,6 +393,7 @@ Traffic</textarea>
           </select>
         </div>
         <p class="hint" id="eventLayoutHelp">La zona inferior reserva espacio propio para los datos y ajusta el título encima.</p>
+        <div class="field" id="evFooterPlacementField"><label for="evFooterPlacement">Posición de la información</label><select id="evFooterPlacement" aria-describedby="evFooterPlacementHelp"><option value="inside" selected>Dentro del cartel</option><option value="annex">Anexo pegado debajo</option></select><p class="hint" id="evFooterPlacementHelp">Dentro del cartel, los datos comparten el formato con el título. El anexo se añade debajo y aumenta la altura de la descarga.</p></div>
         <div class="two">
           <div class="field"><label for="evDate">Fecha</label><input type="text" id="evDate" value="" placeholder="Sábado 14 de noviembre"></div>
           <div class="field"><label for="evHour">Hora</label><input type="text" id="evHour" value="" placeholder="17:00 – 21:00"></div>
@@ -844,8 +850,19 @@ const FONTS = [
   {name:"Bebas Neue", family:"Bebas Neue", w:null, g:null, fixedG:400, gq:"Bebas+Neue"},
 ];
 const PALETTES = [
-  ["#7e918a","#ebe3d8"],["#1c1f1e","#f2efe8"],["#ebe3d8","#1f2a27"],
-  ["#c8432f","#f4e9dc"],["#e9d24a","#1b1b1b"],["#24345c","#e9b8a0"],["#f1ede4","#c8432f"]
+  ['#7e918a', '#ebe3d8', 'Salvia / marfil'],
+  ['#1c1f1e', '#f2efe8', 'Carbón / crema'],
+  ['#ebe3d8', '#1f2a27', 'Marfil / bosque'],
+  ['#c8432f', '#f4e9dc', 'Teja / crema'],
+  ['#e9d24a', '#1b1b1b', 'Amarillo / negro'],
+  ['#24345c', '#e9b8a0', 'Marino / melocotón'],
+  ['#f1ede4', '#c8432f', 'Crema / teja'],
+  ['#794c61', '#d2ad43', 'Malva / mostaza · OATH'],
+  ['#1739b5', '#ffd07a', 'Cobalto / mandarina'],
+  ['#bde8d0', '#382278', 'Menta / índigo'],
+  ['#ffc08a', '#064f4a', 'Albaricoque / petróleo'],
+  ['#f4b8ce', '#7b173e', 'Rosa / frambuesa'],
+  ['#49332c', '#9ddfea', 'Cacao / celeste']
 ];
 const STRETCH_KW = [[50,"ultra-condensed"],[62.5,"extra-condensed"],[75,"condensed"],[87.5,"semi-condensed"],[100,"normal"],[112.5,"semi-expanded"],[125,"expanded"],[150,"extra-expanded"],[200,"ultra-expanded"]];
 const SAMPLES = 25;
@@ -864,7 +881,7 @@ function exportSize(L){
     const ppi=$("res").value==="custom"?Math.max(36,Math.min(1200,+$("resCustom").value||200)):(+$("res").value||300);
     return {w:Math.round(L.W/25.4*ppi),h:Math.round(L.H/25.4*ppi),ppi};
   }
-  const k=+$("res").value||1; return {w:L.W*k,h:L.H*k,ppi:null};
+  const k=+$("res").value||1; return {w:Math.round(L.W*k),h:Math.round(L.H*k),ppi:null};
 }
 const $ = id => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
@@ -892,12 +909,20 @@ function fillFontSelect(selectIdx){
   sel.value=String(selectIdx);
 }
 fillFontSelect(0);
-PALETTES.forEach(([b,f])=>{
+PALETTES.forEach(([b,f,name])=>{
   const s=document.createElement("button");s.type="button";s.className="sw";s.style.background=b;
-  s.setAttribute("aria-label","Combinación "+b+" y "+f);
+  const description = name + ' · Papel ' + b.toUpperCase() + ' · Tinta ' + f.toUpperCase();
+  s.setAttribute('aria-label', description);
+  s.title = description;
   const sp=document.createElement("span");sp.style.background=f;s.appendChild(sp);
   s.addEventListener("click",()=>{$("bgc").value=b;$("fgc").value=f;schedule()});
   $("swatches").appendChild(s);
+});
+$('invertColors').addEventListener('click', () => {
+  const paper = $('bgc').value;
+  $('bgc').value = $('fgc').value;
+  $('fgc').value = paper;
+  schedule();
 });
 function font(){return FONTS[+$("font").value]}
 function syncWeightRange(keep){
@@ -1002,7 +1027,7 @@ $('resetLineHeights').addEventListener('click', () => {
 });
 $("font").addEventListener("change",()=>{syncWeightRange(false);loadAndRun()});
 $("wnew").addEventListener("click",()=>{ $("wseed").value=1+Math.floor(Math.random()*99999); schedule(); });
-["lineFit","evFooterSizing","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain","wrk","wseed","wint","wwid","wrel","wdir","wamt","wcrk",
+["evFooterPlacement","lineFit","evFooterSizing","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain","wrk","wseed","wint","wwid","wrel","wdir","wamt","wcrk",
  "res","resCustom","stOn","evOn","evDate","evHour","evPlace","evFree","evTL","evTR","evBL","evBR","evStripPos","evSL","evSC","evSR",
  "evLabelContent","evLabelSize","evLabelRot","evLabelAuto","evLabelBg","evLabelFg","evSize","evCut"].forEach(id=>{
   $(id).addEventListener("input",schedule);$(id).addEventListener("change",schedule);
@@ -1159,8 +1184,8 @@ const Store=(function(){
 })();
 
 const SETTINGS_KEY="cartel-a-caja:ajustes";
-const SAVED_IDS=["lineFit","evFooterSizing","lineHeights","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain",
-  "wrk","wseed","wint","wwid","wrel","wdir","wamt","wcrk","bgOp","bgFit","fgOp","stOn","sti","stc","stg","res","resCustom",
+const SAVED_IDS=["evFooterPlacement","lineFit","evFooterSizing","lineHeights","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain",
+  "wrk","wseed","wint","wwid","wrel","wdir","wamt","wcrk","bgOp","bgFit","bgZoom","fgOp","stOn","sti","stc","stg","res","resCustom",
   "evOn","evDate","evHour","evPlace","evFree","evPreset","evTL","evTR","evBL","evBR","evStripPos","evSL","evSC","evSR",
   "evLabelContent","evLabelSize","evLabelRot","evLabelX","evLabelY","evLabelAuto","evLabelBg","evLabelFg","evSize","evCut"];
 let restoring=true;
@@ -1184,11 +1209,24 @@ function applySettings(o){
 }
 
 // ---------------- imagen de fondo ----------------
-const BG={url:null,dataUrl:null,blob:null,name:""};
+const BG={url:null,dataUrl:null,blob:null,name:"",width:0,height:0};
 function setBackground(blob,name,save){
   if(BG.url) URL.revokeObjectURL(BG.url);
   BG.blob=blob; BG.name=name||"imagen"; BG.dataUrl=null;
   BG.url=blob?URL.createObjectURL(blob):null;
+  BG.width = 0; BG.height = 0;
+  if (blob) {
+    if (save) $('bgZoom').value = '100';
+    const url = BG.url;
+    const image = new Image();
+    image.onload = () => {
+      if (BG.url !== url) return;
+      BG.width = image.naturalWidth;
+      BG.height = image.naturalHeight;
+      schedule();
+    };
+    image.src = url;
+  }
   $("bgCtrls").hidden=!blob;
   $("bgLabel").textContent=blob?BG.name+" · cambiar":"Elige o arrastra una foto o textura";
   if(save){ if(blob) blob.arrayBuffer().then(buf=>Store.set("bg",{name:BG.name,type:blob.type,buf})); else Store.del("bg"); }
@@ -1203,9 +1241,13 @@ const bgDrop=$("bgDrop");
 ["dragenter","dragover"].forEach(ev=>bgDrop.addEventListener(ev,e=>{e.preventDefault();bgDrop.classList.add("drag")}));
 ["dragleave","drop"].forEach(ev=>bgDrop.addEventListener(ev,e=>{e.preventDefault();bgDrop.classList.remove("drag")}));
 bgDrop.addEventListener("drop",e=>{ const f=e.dataTransfer&&e.dataTransfer.files[0]; if(f&&f.type.startsWith("image/")) setBackground(f,f.name,true); });
+$('bgZoomReset').addEventListener('click', () => {
+  $('bgZoom').value = '100';
+  schedule();
+});
 $("bgRemove").addEventListener("click",()=>setBackground(null,"",true));
 $("forgetFonts").addEventListener("click",async()=>{ await Store.del("fonts"); try{ localStorage.removeItem(SETTINGS_KEY+":font"); }catch(e){} location.reload(); });
-["bgOp","bgFit","fgOp","sti","stc","stg"].forEach(id=>{ $(id).addEventListener("input",schedule); $(id).addEventListener("change",schedule); });
+["bgZoom","bgOp","bgFit","fgOp","sti","stc","stg"].forEach(id=>{ $(id).addEventListener("input",schedule); $(id).addEventListener("change",schedule); });
 
 // ---------------- medición ----------------
 function weightAt(w,f,base,comp){
@@ -1336,12 +1378,15 @@ function run(){
   $("marginOut").textContent=fmtLen(m,unit); $("gapOut").textContent=fmtLen(gap,unit);
   if($("res").dataset.unit!==unit) fillRes();
   $("resCustom").hidden=$("res").value!=="custom";
-  { const es=exportSize({unit,W,H}); $("resOut").textContent=es.w+" × "+es.h+" px"; }
   const footer = $("evOn").checked && $("evPreset").value === "partida";
   const footerLayout = footer ? layoutGameFooter(W, H, m, f) : null;
   const footerH = footerLayout ? footerLayout.height : 0;
-  const footerGap = footerH ? W * 0.025 : 0;
-  const Wt=W-2*m, Hav=Math.max(H * 0.05, H-2*m-footerH-footerGap);
+  const footerAnnex = footerH > 0 && $('evFooterPlacement').value === 'annex';
+  const insideFooterH = footerAnnex ? 0 : footerH;
+  const footerGap = insideFooterH ? W * 0.025 : 0;
+  const outputH = H + (footerAnnex ? footerH : 0);
+  { const es=exportSize({unit,W,H:outputH}); $('resOut').textContent=es.w+' × '+es.h+' px'; }
+  const Wt=W-2*m, Hav=Math.max(H * 0.05, H-2*m-insideFooterH-footerGap);
   const notes=[];
 
   const measured=lines.map(t=>measureLine(t,f,base,comp,trackEm,$("optical").checked));
@@ -1412,7 +1457,7 @@ function run(){
     }
     if(total>Hav) scale=Hav/total;
   }
-  draw(fit,measured,{W,H,m,gap,Wt,Hav,total,scale,f,trackEm,unit,footerH,footerLayout});
+  draw(fit,measured,{W,H,m,gap,Wt,Hav,total,scale,f,trackEm,unit,footerH,footerLayout,footerAnnex,outputH});
   if(evNote) notes.push(evNote);
   const n=$("notice"); n.hidden=!notes.length; n.textContent=notes.join(" ");
 }
@@ -1502,7 +1547,6 @@ function layoutGameFooter(W, H, margin, font) {
   const pad = W * 0.025;
   const width = W - 2 * margin;
   const innerW = Math.max(W * 0.01, width - 2 * pad);
-  const colW = Math.max(W * 0.01, (innerW - pad) / 2);
   const fields = [
     ['FECHA', $('evDate').value], ['HORARIO', $('evHour').value],
     ['LUGAR', $('evPlace').value], ['PLAZAS', $('evPlayers').value],
@@ -1513,6 +1557,8 @@ function layoutGameFooter(W, H, margin, font) {
   if (!fields.length && !description && !contact) return null;
   const requested = W * 0.025 * (+$('evSize').value) / 100;
   function measure(size) {
+    const columnGap = Math.max(W * 0.06, size * 2);
+    const colW = Math.max(W * 0.01, (innerW - columnGap) / 2);
     const rows = [];
     for (let i = 0; i < fields.length; i += 2) {
       const cells = fields.slice(i, i + 2).map(([label, value]) => ({
@@ -1523,13 +1569,22 @@ function layoutGameFooter(W, H, margin, font) {
     }
     const descriptionLines = description ? wrapFooterText(description, face, size * 0.8, innerW) : [];
     const contactLines = contact ? wrapFooterText(contact, face, size * 0.8, innerW) : [];
+    const columnWidths = [];
+    rows.forEach(row => row.cells.forEach((cell, index) => {
+      const cellWidth = Math.max(measureW(cell.label, face, size * 0.5, 0),
+        ...cell.lines.map(line => measureW(line, face, size, 0)));
+      columnWidths[index] = Math.max(columnWidths[index] || 0, cellWidth);
+    }));
+    const columnsWidth = columnWidths.reduce((sum, value) => sum + value, 0)
+      + (columnWidths.length > 1 ? columnGap : 0);
     const textHeight = lines => lines.length ? (lines.length * 1.2 + 0.4) * size * 0.8 : 0;
     const height = 2 * pad + rows.reduce((sum, row) => sum + row.height, 0)
       + textHeight(descriptionLines) + textHeight(contactLines);
-    return { face, pad, colW, rows, descriptionLines, contactLines, size, height, requested };
+    return { face, pad, columnGap, columnWidths, columnsWidth, rows, descriptionLines, contactLines, size, height, requested };
   }
   const manual = $('evFooterSizing').value === 'manual';
-  const limit = Math.max(2 * pad + W * 0.01, Math.min(
+  const annex = $('evFooterPlacement').value === 'annex';
+  const limit = annex && !manual ? Infinity : Math.max(2 * pad + W * 0.01, Math.min(
     manual ? H * (+$('evFooterHeight').value) / 100 : H,
     (H - 2 * margin) * 0.65));
   let layout = measure(requested);
@@ -1548,13 +1603,16 @@ function layoutGameFooter(W, H, margin, font) {
 function drawGameFooter(group, o) {
   const layout = o.footerLayout;
   if (!layout) return;
-  const { face, pad, colW, rows, descriptionLines, contactLines, size: fs } = layout;
+  const { face, pad, columnGap, columnWidths, columnsWidth, rows, descriptionLines, contactLines, size: fs } = layout;
   const inverse = $('evFooterStyle').value === 'inverse';
   const ink = $('fgc').value, paper = $('bgc').value;
-  const x = o.m, y = o.H - o.m - o.footerH;
+  const x = o.footerAnnex ? 0 : o.m;
+  const y = o.footerAnnex ? o.H : o.H - o.m - o.footerH;
+  const width = o.footerAnnex ? o.W : o.Wt;
   group.setAttribute('data-game-footer', '1');
-  if (inverse) group.appendChild(el('rect', { x, y, width: o.Wt, height: o.footerH, fill: ink }));
-  else group.appendChild(el('line', { x1: x, x2: x + o.Wt, y1: y, y2: y, stroke: ink, 'stroke-width': o.W * 0.002 }));
+  if (o.footerAnnex) group.setAttribute('data-footer-annex', '1');
+  if (inverse) group.appendChild(el('rect', { x, y, width, height: o.footerH, fill: ink }));
+  else group.appendChild(el('line', { x1: x, x2: x + width, y1: y, y2: y, stroke: ink, 'stroke-width': o.W * 0.002 }));
   function text(value, tx, baseline, size, label = false) {
     const t = el('text', { x: tx, y: baseline, 'font-size': size, fill: inverse ? paper : ink, opacity: label ? 0.7 : 1 });
     t.style.fontFamily = '"' + face.fam + '"';
@@ -1563,18 +1621,21 @@ function drawGameFooter(group, o) {
     t.textContent = value;
     group.appendChild(t);
   }
-  const innerX = x + pad;
+  const columnsX = (o.W - columnsWidth) / 2;
   let cursor = y + pad;
   rows.forEach(row => {
     row.cells.forEach((cell, i) => {
-      const tx = innerX + i * (colW + pad);
+      const tx = columnsX + (i ? columnWidths[0] + columnGap : 0);
       text(cell.label, tx, cursor + fs * 0.55, fs * 0.5, true);
       cell.lines.forEach((line, index) => text(line, tx, cursor + fs * (1.75 + index * 1.2), fs));
     });
     cursor += row.height;
   });
   for (const lines of [descriptionLines, contactLines]) {
-    lines.forEach((line, index) => text(line, innerX, cursor + fs * 0.8 * (1 + index * 1.2), fs * 0.8));
+    const textWidth = Math.max(0, ...lines.map(line => measureW(line, face, fs * 0.8, 0)));
+    const blockWidth = Math.max(columnsWidth, textWidth);
+    const textX = (o.W - blockWidth) / 2;
+    lines.forEach((line, index) => text(line, textX, cursor + fs * 0.8 * (1 + index * 1.2), fs * 0.8));
     if (lines.length) cursor += (lines.length * 1.2 + 0.4) * fs * 0.8;
   }
   if (fs < layout.requested * 0.7) {
@@ -1632,8 +1693,11 @@ function syncEventUi(){
     ? 'La información está visible. Los campos vacíos no se muestran.'
     : 'Activa esta opción para ver los datos. Puedes rellenarlos antes; los campos vacíos no se muestran.';
   $('eventLayoutHelp').textContent = p === 'partida'
-    ? 'La zona inferior reserva espacio propio para los datos y ajusta el título encima.'
+    ? ($('evFooterPlacement').value === 'annex'
+      ? 'El anexo se pega al borde inferior y conserva toda la altura del cartel para el título.'
+      : 'La zona inferior reserva espacio propio para los datos y ajusta el título encima.')
     : 'Esta disposición utiliza fecha, hora, lugar y contacto. Plazas, duración, nivel y descripción se muestran en la zona inferior.';
+  $('evFooterPlacementField').hidden = p !== 'partida';
   $("gameFields").hidden=p!=="partida";
   $("evFooterHeightField").hidden = $("evFooterSizing").value !== "manual";
   $("evFooterHeightOut").textContent=$("evFooterHeight").value+" %";
@@ -1796,9 +1860,11 @@ $("openFile").addEventListener("change",async e=>{
     if(doc.background&&doc.background.data) setBackground(new Blob([unb64(doc.background.data)],{type:doc.background.type||"image/jpeg"}),doc.background.name,true);
     else setBackground(null,"",true);
     const st=doc.settings;
+    $('bgZoom').value = '100';
     $('lineHeights').value = '[]';
     $('lineFit').value = 'natural';
     $('evFooterSizing').value = 'auto';
+    $('evFooterPlacement').value = 'inside';
     applySettings(st);
     const i=FONTS.findIndex(f=>f.name===st.font);
     fillFontSelect(i>=0?i:0); syncWeightRange(false); applySettings(st);
@@ -1834,9 +1900,9 @@ function addStampFilter(defs,W,H){
 
 function draw(fit,measured,o){
   const svg=$("poster"); svg.textContent="";
-  svg.setAttribute("viewBox","0 0 "+o.W+" "+o.H);
-  svg.dataset.w=o.W; svg.dataset.h=o.H; svg.dataset.unit=o.unit;
-  svg.style.setProperty("--ar",(o.W/o.H).toFixed(4));
+  svg.setAttribute("viewBox","0 0 "+o.W+" "+o.outputH);
+  svg.dataset.w=o.W; svg.dataset.h=o.outputH; svg.dataset.unit=o.unit;
+  svg.style.setProperty("--ar",(o.W/o.outputH).toFixed(4));
   const bg=$("bgc").value, fg=$("fgc").value;
   const defs=el("defs",{});
   if($("grain").checked){
@@ -1846,12 +1912,26 @@ function draw(fit,measured,o){
     defs.appendChild(flt);
   }
   svg.appendChild(defs);
-  svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.H,fill:bg}));
+  svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.outputH,fill:bg}));
   $("bgOpOut").textContent=$("bgOp").value+" %"; $("fgOpOut").textContent=$("fgOp").value+" %";
-  if(BG.url){
-    const bim=el("image",{x:0,y:0,width:o.W,height:o.H,preserveAspectRatio:"xMidYMid "+$("bgFit").value,opacity:(+$("bgOp").value/100).toFixed(2),"data-bg":"1"});
-    bim.setAttribute("href",BG.url);
-    svg.appendChild(bim);
+  $('bgZoomOut').textContent = $('bgZoom').value + ' %';
+  if (BG.url) {
+    const zoom = Math.max(0.1, Math.min(5, +$('bgZoom').value / 100 || 1));
+    const imageW = BG.width || o.W, imageH = BG.height || o.H;
+    const ratios = [o.W / imageW, o.H / imageH];
+    const fit = $('bgFit').value === 'slice' ? Math.max(...ratios) : Math.min(...ratios);
+    const width = imageW * fit * zoom, height = imageH * fit * zoom;
+    const clip = el('clipPath', { id: 'background-clip', clipPathUnits: 'userSpaceOnUse' });
+    clip.appendChild(el('rect', { x: 0, y: 0, width: o.W, height: o.H }));
+    defs.appendChild(clip);
+    const imageGroup = el('g', { 'clip-path': 'url(#background-clip)', 'data-background': '1' });
+    const bim = el('image', {
+      x: (o.W - width) / 2, y: (o.H - height) / 2, width, height,
+      preserveAspectRatio: 'xMidYMid meet', opacity: (+$('bgOp').value / 100).toFixed(2), 'data-bg': '1'
+    });
+    bim.setAttribute('href', BG.url);
+    imageGroup.appendChild(bim);
+    svg.appendChild(imageGroup);
   }
   const g=el("g",{fill:fg,opacity:(+$("fgOp").value/100).toFixed(2)});
   const stamp=addStampFilter(defs,o.W,o.H);
@@ -1880,7 +1960,7 @@ function draw(fit,measured,o){
   });
   // Las métricas SVG pueden exceder las medidas del canvas en fuentes propias.
   // Ajusta el bloque completo de forma proporcional al espacio reservado.
-  if (o.footerH && rows.length && !(state.mode === 'lines' && $('lineFit').value === 'stretch')) {
+  if (o.footerH && !o.footerAnnex && rows.length && !(state.mode === 'lines' && $('lineFit').value === 'stretch')) {
     const bounds = g.getBBox();
     if (bounds.height && (bounds.y < o.m || bounds.y + bounds.height > o.m + o.Hav)) {
       const fitScale = Math.min(1, o.Hav / bounds.height, o.Wt / bounds.width);
@@ -1903,9 +1983,9 @@ function draw(fit,measured,o){
     svg.appendChild(im);
   }
   if($("grain").checked){
-    svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.H,filter:"url(#grain)",opacity:"0.13",style:"mix-blend-mode:multiply;pointer-events:none"}));
+    svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.outputH,filter:"url(#grain)",opacity:"0.13",style:"mix-blend-mode:multiply;pointer-events:none"}));
   }
-  lastLayout={rows,unit:o.unit,f:o.f,used:[...used],W:o.W,H:o.H};
+  lastLayout={rows,unit:o.unit,f:o.f,used:[...used],W:o.W,H:o.outputH,posterH:o.H};
   renderSpecs();
 }
 function widthCell(r,f){ return f.cuts?r.label:(f.w?r.w.toFixed(1).replace(".",","):"fija"); }
@@ -1967,7 +2047,7 @@ async function buildSvg(){
     const pxW=exportSize(L).w;
     toast("Calculando las arrugas a resolución de imprenta…");
     await new Promise(r=>setTimeout(r,30));
-    wimg.setAttribute("href",wrkOverlay(L.H/L.W,Math.min(EXPORT_GRID_MAX,pxW)));
+    wimg.setAttribute("href",wrkOverlay(L.posterH/L.W,Math.min(EXPORT_GRID_MAX,pxW)));
     wimg.removeAttribute("data-wrk");
   }
   let embedded=true;

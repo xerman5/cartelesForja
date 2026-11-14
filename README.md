@@ -3,7 +3,7 @@
 Dos editores de carteles en una aplicación web estática, sin instalación de dependencias:
 
 - **Partidas** (`index.html`): portada, descripción, fecha, horario, lugar, plazas y valoraciones BGG. Exporta PNG y WebP.
-- **Tipográfico** (`tipografico.html`): texto ajustado al ancho, alturas por línea, fuentes variables o propias, papel, grano, arrugas y datos de evento con zona inferior de altura automática. Exporta PNG y SVG, con formatos para pantalla e imprenta.
+- **Tipográfico** (`tipografico.html`): texto ajustado al ancho, alturas por línea, fuentes variables o propias, papel, grano, arrugas y datos de evento con zona inferior de altura automática, integrada en el cartel o como anexo pegado debajo. Exporta PNG y SVG, con formatos para pantalla e imprenta.
 
 ## Uso local
 
