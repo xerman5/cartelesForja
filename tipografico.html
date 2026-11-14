@@ -1,0 +1,2112 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartel a caja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=Saira:wdth,wght@50..125,100..900&family=Archivo:wdth,wght@62..125,100..900&family=Mona+Sans:wdth,wght@75..125,200..900&family=League+Gothic:wdth@75..100&family=Six+Caps&family=Antonio:wght@100..700&family=Anton&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Mesa de trabajo: cajas de ajustes a la izquierda, cartel fijo con su barra a la derecha; en móvil, cartel arriba. */
+:root{
+  --bg:#eceeea; --panel:#f7f8f5; --box:#ffffff; --fg:#1d2321; --muted:#5f6b66; --line:#d3d8d3; --line-soft:#e4e8e3;
+  --accent:#3f5f55; --accent-fg:#f7f8f5; --warn:#8a5a12; --warn-bg:#f6ecd8; --danger:#9b3b2a;
+  --f-display:"Anybody","Archivo",system-ui,sans-serif;
+  --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --dock:132px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#141917; --panel:#1b211f; --box:#202724; --fg:#e4e9e5; --muted:#97a39d; --line:#2f3834; --line-soft:#29312d;
+  --accent:#8fb3a6; --accent-fg:#141917; --warn:#e8c27a; --warn-bg:#2e2617; --danger:#e08a78; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.app{display:grid;grid-template-columns:minmax(310px,370px) 1fr;min-height:100%}
+.panel{background:var(--panel);border-right:1px solid var(--line);padding:18px 16px 40px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.stage{display:flex;flex-direction:column;padding:20px 16px 0 24px;min-width:0;position:sticky;top:0;align-self:start;height:100vh}
+h1{font-family:var(--f-display);font-weight:900;font-variation-settings:"wdth" 150,"wght" 900;font-size:28px;line-height:.95;margin:0}
+.lede{margin:6px 0 4px;color:var(--muted);max-width:40ch;font-size:13px}
+
+/* cajas */
+.box{background:var(--box);border:1px solid var(--line);border-radius:10px;min-width:0}
+.box>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.box>summary::-webkit-details-marker{display:none}
+.box>summary .num{font-family:var(--f-mono);font-size:11px;color:var(--muted);width:14px}
+.box>summary .ttl{font-size:12px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;flex:1}
+.box>summary .chev{width:14px;height:14px;color:var(--muted);transition:transform .15s}
+.box[open]>summary .chev{transform:rotate(90deg)}
+.box-body{display:flex;flex-direction:column;gap:14px;padding:2px 14px 16px;border-top:1px solid var(--line-soft);padding-top:14px}
+.sub{display:flex;flex-direction:column;gap:12px;padding-top:12px;border-top:1px solid var(--line-soft)}
+.sub-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sub-head h3{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}
+.more>summary{cursor:pointer;font-size:12px;color:var(--accent);list-style:none;display:flex;align-items:center;gap:6px}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary::before{content:"";width:0;height:0;border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s}
+.more[open]>summary::before{transform:rotate(90deg)}
+.more>div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+
+/* interruptor */
+.switch{position:relative;display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:500;cursor:pointer}
+.switch input{appearance:none;-webkit-appearance:none;width:30px;height:18px;border-radius:9px;background:var(--line);margin:0;cursor:pointer;position:relative;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--box);transition:transform .15s;box-shadow:0 1px 2px rgb(0 0 0/.25)}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(12px)}
+
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{font-weight:500}
+output{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+textarea,select,input[type=text],input[type=number]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 10px;width:100%;min-width:0}
+textarea{font-family:var(--f-mono);font-size:14px;resize:vertical;min-height:92px;line-height:1.5}
+input[type=number]{font-family:var(--f-mono)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=range]:disabled{opacity:.4}
+textarea:focus-visible,select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible,.file:focus-within,.iconbtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.check{display:flex;gap:8px;align-items:center;font-weight:400}
+.check input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--fg);padding:7px 4px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.file{display:flex;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--line);border-radius:8px;padding:12px;cursor:pointer;text-align:center;color:var(--fg);background:var(--bg);font-size:13px;min-width:0}
+.file:hover,.file.drag{border-color:var(--accent)}
+.file input{position:absolute;width:1px;height:1px;opacity:0}
+.fontrow{display:flex;gap:8px}
+.fontrow select{flex:1}
+.addfont{width:38px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer;color:var(--fg);font-size:20px;line-height:1;position:relative}
+.addfont:hover,.addfont.drag{border-color:var(--accent);color:var(--accent)}
+.addfont input{position:absolute;width:1px;height:1px;opacity:0}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0;position:relative;overflow:hidden}
+.sw span{position:absolute;inset:0;clip-path:polygon(100% 0,100% 100%,0 100%)}
+.colorline{display:flex;align-items:center;gap:10px}
+.colorline label{font-weight:500}
+input[type=color]{width:34px;height:28px;border:1px solid var(--line);border-radius:4px;padding:0;background:none;cursor:pointer;flex:none}
+.seedrow{display:flex;gap:8px}
+.seedrow input{flex:1}
+.saved{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;color:var(--muted)}
+.saved span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linkbtn{font:inherit;font-size:12px;background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;align-self:flex-start}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+.resrow{display:flex;gap:8px;align-items:center}
+.resrow select{flex:1}
+.resrow input{width:86px;flex:none}
+.slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.slots.corners{grid-template-columns:1fr 1fr}
+.slots select{padding:6px 6px;font-size:12px}
+.slots .cap{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* escenario */
+.poster-wrap{flex:1;min-height:0;display:flex;justify-content:center;align-items:flex-start;min-width:0}
+#poster{display:block;max-width:100%;height:auto;width:min(100%, calc((100vh - var(--dock) - 24px) * var(--ar, .707)));box-shadow:0 1px 2px rgb(0 0 0/.08),0 12px 40px -12px rgb(0 0 0/.28);background:#fff;touch-action:none}
+.dock{position:relative;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0 14px}
+.notice{color:var(--warn);font-size:12px;margin:0;max-width:72ch;text-align:center}
+.toast{font-size:12px;color:var(--accent);min-height:1.2em;margin:0;text-align:center}
+.toolbar{display:flex;align-items:center;gap:4px;background:var(--box);border:1px solid var(--line);border-radius:12px;padding:5px;box-shadow:0 6px 18px -12px rgb(0 0 0/.35)}
+.toolbar .sep{width:1px;height:22px;background:var(--line);margin:0 6px}
+.iconbtn{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--fg);border-radius:8px;padding:7px 9px;cursor:pointer;font:inherit;font-size:12px;font-weight:600;letter-spacing:.04em;position:relative}
+.iconbtn:hover{background:var(--bg)}
+.iconbtn[aria-pressed="true"]{background:var(--bg);color:var(--accent)}
+.iconbtn svg{width:18px;height:18px;flex:none}
+.iconbtn:disabled{opacity:.5;cursor:wait}
+.iconbtn input{position:absolute;width:1px;height:1px;opacity:0}
+.confirm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px}
+.confirm .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.drawer{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);width:min(820px,100%);max-height:55vh;overflow:auto;background:var(--box);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 18px 40px -18px rgb(0 0 0/.45);display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.drawer-head h2{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0;font-weight:700}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+td{font-family:var(--f-mono);font-size:13px}
+td:first-child{font-family:var(--f-body);font-weight:600}
+tr:last-child td{border-bottom:0}
+#measure{position:absolute;left:-9999px;top:0;width:10px;height:10px;visibility:hidden;overflow:hidden}
+#poster [data-evlabel]{cursor:grab}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .stage{order:-1;padding:10px 12px 0;height:auto;max-height:62vh;z-index:2;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 6px 16px -10px rgb(0 0 0/.35)}
+  #poster{width:min(100%, calc((62vh - var(--dock) - 10px) * var(--ar, .707)))}
+  .iconbtn span.lbl{display:none}
+  .panel{border-right:0;padding-right:12px;padding-left:12px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<link rel="stylesheet" href="editors.css">
+</head>
+<body data-editor="tipo">
+<nav class="editor-nav" aria-label="Editores de carteles">
+  <a class="editor-brand" href="index.html">Carteles La Forja</a>
+  <div class="editor-modes">
+    <a href="index.html">Partidas</a>
+    <a href="tipografico.html" aria-current="page">Tipográfico</a>
+  </div>
+  <a class="editor-help" href="docs/cartel-a-caja.txt" target="_blank" rel="noopener">Ayuda del editor</a>
+</nav>
+
+<div class="app">
+  <aside class="panel">
+    <header>
+      <h1>Cartel a caja</h1>
+      <p class="lede">Tu cartel, de la tipografía a los detalles de la partida.</p>
+    </header>
+
+<div class="workflow-tabs" role="tablist" aria-label="Configurar cartel">
+<button type="button" role="tab" id="tab-texto" aria-controls="step-texto" aria-selected="true" tabindex="0" data-step="texto"><span>01</span>Texto</button>
+<button type="button" role="tab" id="tab-estilo" aria-controls="step-estilo" aria-selected="false" tabindex="-1" data-step="estilo"><span>02</span>Estilo</button>
+<button type="button" role="tab" id="tab-partida" aria-controls="step-partida" aria-selected="false" tabindex="-1" data-step="partida"><span>03</span>Información</button>
+<button type="button" role="tab" id="tab-formato" aria-controls="step-formato" aria-selected="false" tabindex="-1" data-step="formato"><span>04</span>Formato</button>
+</div>
+<section class="workflow-panel" id="step-texto" role="tabpanel" aria-labelledby="tab-texto" tabindex="0"><p class="step-caption">Título y tipografía</p>
+<details class="box" open data-box="texto">
+      <summary><span class="num">2</span><span class="ttl">Texto</span><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></summary>
+      <div class="box-body">
+        <div class="field">
+          <label for="txt">Una línea por fila</label>
+          <textarea id="txt" spellcheck="false">An
+Infamous
+Traffic</textarea>
+        </div>
+        <label class="check"><input type="checkbox" id="upper" checked> Pasar a mayúsculas</label>
+        <div class="field">
+          <span id="modeLbl" style="font-weight:500">Reparto</span>
+          <div class="seg line-modes" role="group" aria-labelledby="modeLbl">
+            <button type="button" id="modeEqual" aria-pressed="true">Misma altura</button>
+            <button type="button" id="modeFill" aria-pressed="false">Rellenar</button>
+            <button type="button" id="modeSame" aria-pressed="false">Mismo cuerpo</button>
+            <button type="button" id="modeLines" aria-pressed="false">Por línea</button>
+          </div>
+          <p class="hint" id="modeHint"></p>
+        </div>
+        <div id="lineHeightFields" class="game-fields" hidden>
+          <div class="field"><label for="lineFit">Ajuste a la caja</label><select id="lineFit"><option value="stretch" selected>Llenar cada caja · estirar las letras</option><option value="natural">Conservar las proporciones de la fuente</option></select><p class="hint" id="lineFitHelp">Las letras se estiran para llenar exactamente el ancho y la altura que asignes a cada línea.</p></div>
+          <p class="hint" id="lineHeightHelp">Alturas relativas: una línea al 200 % mide el doble que otra al 100 %. El ancho sigue siendo el de la caja. Los ajustes se aplican por orden de línea.</p>
+          <input type="hidden" id="lineHeights" value="[]">
+          <div id="lineHeightControls" class="game-fields" aria-describedby="lineHeightHelp"></div>
+          <button type="button" class="linkbtn" id="referenceLineHeights">Alturas como la referencia · 7 : 1 : 4</button>
+          <button type="button" class="linkbtn" id="resetLineHeights">Igualar todas las alturas</button>
+        </div>
+        <div class="field" id="sizeField" hidden>
+          <div class="row"><label for="size">Cuerpo base</label><output id="sizeOut"></output></div>
+          <input type="range" id="size" min="5" max="60" value="22">
+        </div>
+        <div class="field">
+          <div class="row"><label for="gap">Separación entre líneas</label><output id="gapOut"></output></div>
+          <input type="range" id="gap" min="0" max="8" step="0.25" value="2.5">
+        </div>
+      </div>
+    </details>
+<details class="box" open data-box="tipo">
+      <summary><span class="num">3</span><span class="ttl">Tipografía</span><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></summary>
+      <div class="box-body">
+        <div class="field">
+          <label for="font">Familia</label>
+          <div class="fontrow">
+            <select id="font"></select>
+            <label class="addfont" id="drop" title="Añadir fuentes (OTF, TTF, WOFF, WOFF2). También puedes arrastrarlas aquí.">+
+              <input type="file" id="files" multiple accept=".otf,.ttf,.woff,.woff2" aria-label="Añadir fuentes">
+            </label>
+          </div>
+          <p class="hint" id="fontRange"></p>
+          <button type="button" class="linkbtn" id="loadTusker">Usar Tusker Super · 9 anchos</button>
+          <div class="saved" id="savedFonts" hidden>
+            <span id="savedSum"></span>
+            <button type="button" class="linkbtn" id="forgetFonts">Olvidar</button>
+          </div>
+        </div>
+        <div class="two">
+          <div class="field">
+            <div class="row"><label for="wght">Peso</label><output id="wghtOut"></output></div>
+            <input type="range" id="wght">
+          </div>
+          <div class="field">
+            <div class="row"><label for="track">Tracking</label><output id="trackOut"></output></div>
+            <input type="range" id="track" min="-60" max="120" value="0">
+          </div>
+        </div>
+        <div class="field">
+          <div class="row">
+            <span class="colorline"><input type="color" id="fgc" value="#ebe3d8" aria-label="Color de la tinta"><label for="fgc">Tinta</label></span>
+            <output id="fgOpOut"></output>
+          </div>
+          <input type="range" id="fgOp" min="0" max="100" value="100" aria-label="Opacidad de la tinta">
+        </div>
+
+        <details class="more effect-options" data-box="stampOptions"><summary>Efecto tampón</summary><div><div class="sub" id="stSub">
+          <div class="sub-head"><h3>Tampón</h3><label class="switch"><input type="checkbox" id="stOn" aria-label="Activar el tampón"></label></div>
+          <div id="stBody" class="sub" style="border:0;padding:0">
+            <p class="hint">El centro de cada letra queda perfecto y el borde se deshace en grano.</p>
+            <div class="field">
+              <div class="row"><label for="sti">Intensidad</label><output id="stiOut"></output></div>
+              <input type="range" id="sti" min="0" max="100" value="70">
+            </div>
+            <div class="field">
+              <div class="row"><label for="stc">Contorno</label><output id="stcOut"></output></div>
+              <input type="range" id="stc" min="0" max="100" value="35">
+            </div>
+            <div class="field">
+              <div class="row"><label for="stg">Tamaño del grano</label><output id="stgOut"></output></div>
+              <input type="range" id="stg" min="0" max="100" value="20">
+            </div>
+          </div>
+        </div></div></details>
+
+        <details class="more" data-box="finos">
+          <summary>Ajustes finos</summary>
+          <div>
+            <div class="field">
+              <div class="row"><label for="comp">Engrosar las líneas anchas</label><output id="compOut"></output></div>
+              <input type="range" id="comp" min="0" max="100" value="60">
+              <p class="hint">Solo en fuentes variables con eje de anchura y de peso.</p>
+            </div>
+            <div class="field">
+              <div class="row"><label for="deform">Permitir deformar</label><output id="deformOut"></output></div>
+              <input type="range" id="deform" min="0" max="30" value="0">
+              <p class="hint">Escala horizontal cuando la familia ya no da más de sí. Por encima de un 10 % se nota.</p>
+            </div>
+            <label class="check"><input type="checkbox" id="optical" checked> Alinear por la tinta, no por la caja de la letra</label>
+          </div>
+        </details>
+      </div>
+    </details>
+</section>
+<section class="workflow-panel" id="step-estilo" role="tabpanel" aria-labelledby="tab-estilo" tabindex="0" hidden><p class="step-caption">Color, papel y efectos</p>
+<details class="box" open data-box="papel">
+      <summary><span class="num">4</span><span class="ttl">Papel y pegado</span><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></summary>
+      <div class="box-body">
+        <div class="field">
+          <span class="hint">Combinaciones de papel y tinta</span>
+          <div class="swatches" id="swatches"></div>
+        </div>
+        <div class="row" style="align-items:center">
+          <span class="colorline"><input type="color" id="bgc" value="#7e918a" aria-label="Color del papel"><label for="bgc">Papel</label></span>
+          <label class="check"><input type="checkbox" id="grain" checked> Grano de papel</label>
+        </div>
+
+        <div class="sub">
+          <div class="sub-head"><h3>Imagen</h3></div>
+          <label class="file" id="bgDrop">
+            <input type="file" id="bgFile" accept="image/*">
+            <span id="bgLabel">Elige o arrastra una foto o textura</span>
+          </label>
+          <div class="field" id="bgCtrls" hidden>
+            <div class="row"><label for="bgOp">Opacidad</label><output id="bgOpOut"></output></div>
+            <input type="range" id="bgOp" min="0" max="100" value="100">
+            <div class="resrow">
+              <label for="bgFit" class="sr">Encaje</label>
+              <select id="bgFit">
+                <option value="slice" selected>Cubrir todo el cartel</option>
+                <option value="meet">Mostrar la imagen entera</option>
+              </select>
+              <button type="button" class="linkbtn" id="bgRemove" style="align-self:center">Quitar</button>
+            </div>
+          </div>
+        </div>
+
+        <details class="more effect-options" data-box="wrinkleOptions"><summary>Arrugas y pegado</summary><div><div class="sub">
+          <div class="sub-head"><h3>Pegado</h3><label class="switch"><input type="checkbox" id="wrk" checked aria-label="Activar las arrugas"></label></div>
+          <div id="wrkBody" class="sub" style="border:0;padding:0">
+            <div class="field">
+              <label for="wseed">Semilla</label>
+              <div class="seedrow">
+                <input type="number" id="wseed" min="1" max="999999" step="1" value="1">
+                <button type="button" class="btn" id="wnew">Otra</button>
+              </div>
+            </div>
+            <div class="field">
+              <div class="row"><label for="wint">Intensidad</label><output id="wintOut"></output></div>
+              <input type="range" id="wint" min="0" max="100" value="60">
+            </div>
+            <div class="two">
+              <div class="field">
+                <div class="row"><label for="wwid">Anchura</label><output id="wwidOut"></output></div>
+                <input type="range" id="wwid" min="50" max="250" step="5" value="100">
+              </div>
+              <div class="field">
+                <div class="row"><label for="wrel">Relieve</label><output id="wrelOut"></output></div>
+                <input type="range" id="wrel" min="25" max="200" step="5" value="100">
+              </div>
+            </div>
+            <details class="more" data-box="pegadoMas">
+              <summary>Más</summary>
+              <div>
+                <div class="two">
+                  <div class="field">
+                    <label for="wdir">Dirección</label>
+                    <select id="wdir">
+                      <option value="auto" selected>Automática</option>
+                      <option value="v">Vertical</option>
+                      <option value="h">Horizontal</option>
+                      <option value="d">Diagonal</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="wamt">Cantidad</label>
+                    <select id="wamt">
+                      <option value="few">Pocas</option>
+                      <option value="normal" selected>Normal</option>
+                      <option value="many">Muchas</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="row"><label for="wcrk">Arruguitas finas</label><output id="wcrkOut"></output></div>
+                  <input type="range" id="wcrk" min="0" max="200" step="10" value="100">
+                </div>
+              </div>
+            </details>
+          </div>
+        </div></div></details>
+      </div>
+    </details>
+</section>
+<section class="workflow-panel" id="step-partida" role="tabpanel" aria-labelledby="tab-partida" tabindex="0" hidden><p class="step-caption">Añade la información que acompaña al título del cartel.</p>
+<details class="box" open data-box="evento">
+      <summary><span class="num">5</span><span class="ttl">Información del cartel</span>
+        <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></summary>
+      <div class="box-body">
+        <label class="check event-toggle"><input type="checkbox" id="evOn" aria-describedby="eventHelp"> Mostrar información en el cartel</label>
+        <p class="hint" id="eventHelp">Activa esta opción para ver los datos. Puedes rellenarlos antes; los campos vacíos no se muestran.</p>
+        <button type="button" class="linkbtn" id="fillEventSuggestions">Completar campos vacíos con sugerencias</button>
+        <div class="field">
+          <label for="evPreset">Disposición</label>
+          <select id="evPreset" aria-describedby="eventLayoutHelp">
+            <option value="partida" selected>Zona inferior · información de la partida</option>
+            <option value="corners">Esquinas</option>
+            <option value="label">Etiqueta</option>
+            <option value="strip">Franja</option>
+            <option value="label_strip">Etiqueta girada y franja</option>
+          </select>
+        </div>
+        <p class="hint" id="eventLayoutHelp">La zona inferior reserva espacio propio para los datos y ajusta el título encima.</p>
+        <div class="two">
+          <div class="field"><label for="evDate">Fecha</label><input type="text" id="evDate" value="" placeholder="Sábado 14 de noviembre"></div>
+          <div class="field"><label for="evHour">Hora</label><input type="text" id="evHour" value="" placeholder="17:00 – 21:00"></div>
+        </div>
+        <div class="field"><label for="evPlace">Lugar</label><input type="text" id="evPlace" value="" placeholder="La Forja (Mieres)"></div>
+        <div class="field"><label for="evFree">Contacto o inscripción</label><input type="text" id="evFree" value="" placeholder="MP para pedir plaza"></div>
+
+
+        <div id="gameFields" class="game-fields">
+          <div class="two">
+            <div class="field"><label for="evPlayers">Plazas</label><input type="text" id="evPlayers" placeholder="4 jugadores"></div>
+            <div class="field"><label for="evDuration">Duración</label><input type="text" id="evDuration" placeholder="120 minutos"></div>
+          </div>
+          <div class="field"><label for="evLevel">Nivel o dificultad</label><input type="text" id="evLevel" placeholder="Te enseñamos a jugar"></div>
+          <div class="field"><label for="evDescription">Descripción breve</label><textarea id="evDescription" rows="3" placeholder="De qué va la partida, para quién es…"></textarea></div>
+          <details class="more" data-box="gameLayout"><summary>Diseño de la zona inferior</summary><div>
+            <div class="field"><label for="evFooterSizing">Altura de la zona inferior</label><select id="evFooterSizing"><option value="auto" selected>Automática · según el contenido</option><option value="manual">Manual · reservar un porcentaje</option></select><p class="hint">La altura automática conserva un margen interior y devuelve al título el espacio libre.</p></div>
+            <div class="field" id="evFooterHeightField" hidden><div class="row"><label for="evFooterHeight">Espacio reservado</label><output id="evFooterHeightOut"></output></div><input type="range" id="evFooterHeight" min="18" max="42" step="1" value="28"></div>
+            <div class="field"><label for="evFooterFont">Tipografía de los detalles</label><select id="evFooterFont"><option value="sans">Sencilla y legible</option><option value="poster">La misma del título</option></select></div>
+            <fieldset class="footer-styles"><legend>Estilo de la zona inferior</legend>
+              <label><input type="radio" name="footerStyle" value="paper" checked> Mismo papel</label>
+              <label><input type="radio" name="footerStyle" value="inverse">Contraste</label>
+            </fieldset>
+            <input type="hidden" id="evFooterStyle" value="paper">
+            <p class="hint">El título se ajusta al espacio restante. Los campos vacíos no aparecen en el cartel.</p>
+          </div></details>
+        </div>
+
+        <div class="sub">
+
+          <div class="field" id="evCornersBox">
+            <span class="hint">Qué va en cada esquina</span>
+            <div class="slots corners">
+              <select id="evTL" aria-label="Arriba a la izquierda"></select>
+              <select id="evTR" aria-label="Arriba a la derecha"></select>
+              <select id="evBL" aria-label="Abajo a la izquierda"></select>
+              <select id="evBR" aria-label="Abajo a la derecha"></select>
+            </div>
+          </div>
+
+          <div class="field" id="evStripBox">
+            <div class="row"><span class="hint">Franja</span>
+              <select id="evStripPos" style="width:auto;padding:4px 8px;font-size:12px" aria-label="Posición de la franja">
+                <option value="bottom" selected>Abajo</option><option value="top">Arriba</option>
+              </select></div>
+            <div class="slots">
+              <select id="evSL" aria-label="Franja, izquierda"></select>
+              <select id="evSC" aria-label="Franja, centro"></select>
+              <select id="evSR" aria-label="Franja, derecha"></select>
+            </div>
+          </div>
+
+          <div class="field" id="evLabelBox">
+            <div class="row"><label for="evLabelContent">Etiqueta</label></div>
+            <select id="evLabelContent"></select>
+            <div class="two">
+              <div class="field">
+                <div class="row"><label for="evLabelSize">Tamaño</label><output id="evLabelSizeOut"></output></div>
+                <input type="range" id="evLabelSize" min="40" max="250" step="5" value="100">
+              </div>
+              <div class="field">
+                <div class="row"><label for="evLabelRot">Giro</label><output id="evLabelRotOut"></output></div>
+                <input type="range" id="evLabelRot" min="-15" max="15" step="0.5" value="0">
+              </div>
+            </div>
+            <input type="hidden" id="evLabelX" value="60"><input type="hidden" id="evLabelY" value="66">
+            <p class="hint">Arrástrala sobre el cartel para colocarla.</p>
+            <label class="check"><input type="checkbox" id="evLabelAuto" checked> Colores del cartel (papel y tinta)</label>
+            <div class="row" id="evLabelColors" hidden style="justify-content:flex-start;gap:16px">
+              <span class="colorline"><input type="color" id="evLabelBg" value="#1d1d1d" aria-label="Fondo de la etiqueta"><label for="evLabelBg">Fondo</label></span>
+              <span class="colorline"><input type="color" id="evLabelFg" value="#f2efe8" aria-label="Texto de la etiqueta"><label for="evLabelFg">Texto</label></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub">
+          <div class="field">
+            <div class="row"><label for="evSize">Tamaño de los datos</label><output id="evSizeOut"></output></div>
+            <input type="range" id="evSize" min="50" max="250" step="5" value="100">
+          </div>
+          <div class="field" id="evCutBox" hidden>
+            <label for="evCut">Corte para los datos</label>
+            <select id="evCut"></select>
+          </div>
+        </div>
+      </div>
+    </details>
+</section>
+<section class="workflow-panel" id="step-formato" role="tabpanel" aria-labelledby="tab-formato" tabindex="0" hidden><p class="step-caption">Tamaño y resolución</p>
+<details class="box" open data-box="cartel">
+      <summary><span class="num">1</span><span class="ttl">Cartel</span><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></summary>
+      <div class="box-body">
+        <div class="field">
+          <label for="fmt">Formato</label>
+          <select id="fmt">
+            <option value="297x420x mm" selected>A3 · 297 × 420 mm</option>
+            <option value="420x594x mm">A2 · 420 × 594 mm</option>
+            <option value="500x700x mm">50 × 70 cm</option>
+            <option value="500x800x mm">50 × 80 cm · cartel vertical</option>
+            <option value="1080x1350x px">Instagram 4:5 · 1080 × 1350 px</option>
+            <option value="1080x1920x px">Historia 9:16 · 1080 × 1920 px</option>
+            <option value="1080x1080x px">Cuadrado · 1080 × 1080 px</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="row"><label for="res">Resolución al descargar</label><output id="resOut"></output></div>
+          <div class="resrow">
+            <select id="res"></select>
+            <input type="number" id="resCustom" min="36" max="1200" step="1" value="200" aria-label="Resolución en ppp" hidden>
+          </div>
+        </div>
+        <div class="field">
+          <div class="row"><label for="margin">Margen</label><output id="marginOut"></output></div>
+          <input type="range" id="margin" min="0" max="15" step="0.5" value="5">
+        </div>
+      </div>
+    </details>
+</section>
+  </aside>
+
+  <main class="stage">
+    <div class="poster-wrap">
+      <svg id="poster" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista previa del cartel"></svg>
+    </div>
+    <div class="dock">
+      <div class="drawer" id="specsDrawer" hidden>
+        <div class="drawer-head">
+          <h2>Medidas para rehacerlo en Illustrator o InDesign</h2>
+          <button class="btn" id="copySpecs" type="button">Copiar medidas</button>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Línea</th><th id="sizeHead">Cuerpo</th><th>Anchura / corte</th><th>Peso</th><th>Tracking</th><th>Escala H</th></tr></thead>
+            <tbody id="specBody"></tbody>
+          </table>
+        </div>
+        <p class="hint">El tracking va en milésimas de eme, como en Illustrator e InDesign.</p>
+      </div>
+      <p class="notice" id="notice" role="status" hidden></p>
+      <div class="confirm" id="confirmNew" hidden>
+        <span>¿Empezar un cartel nuevo? Se perderán los cambios que no hayas guardado.</span>
+        <button type="button" class="btn" id="newCancel">Cancelar</button>
+        <button type="button" class="btn danger" id="newOk">Empezar</button>
+      </div>
+      <div class="toolbar" role="toolbar" aria-label="Archivo y exportación">
+        <button type="button" class="iconbtn" id="tbNew" title="Nuevo cartel" aria-label="Nuevo cartel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></svg><span class="action-label">Nuevo</span>
+        </button>
+        <label class="iconbtn" id="tbOpen" title="Abrir un cartel guardado (.json)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>
+          <span class="action-label">Abrir</span>
+          <input type="file" id="openFile" accept=".json,application/json" aria-label="Abrir un cartel guardado">
+        </label>
+        <button type="button" class="iconbtn" id="tbSave" title="Guardar el cartel (.json con fuentes e imagen)" aria-label="Guardar el cartel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/></svg><span class="action-label">Guardar</span>
+        </button>
+        <span class="sep" aria-hidden="true"></span>
+        <button type="button" class="iconbtn" id="dlPng" title="Descargar PNG" aria-label="Descargar PNG">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg><span class="lbl">PNG</span>
+        </button>
+        <button type="button" class="iconbtn" id="dlSvg" title="Descargar SVG" aria-label="Descargar SVG">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20C8 8 16 16 20 4"/><rect x="2.5" y="18.5" width="3" height="3"/><rect x="18.5" y="2.5" width="3" height="3"/></svg><span class="lbl">SVG</span>
+        </button>
+        <span class="sep" aria-hidden="true"></span>
+        <button type="button" class="iconbtn" id="tbSpecs" title="Medidas" aria-label="Medidas" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15l12-12 6 6-12 12z"/><path d="M7 11l2 2M10 8l2 2M13 5l2 2"/></svg>
+        </button>
+      </div>
+      <p class="toast" id="toast" aria-live="polite"></p>
+    </div>
+  </main>
+</div>
+
+<svg id="measure" xmlns="http://www.w3.org/2000/svg"><text id="mText" x="0" y="100" font-size="100"></text><text id="mLast" x="0" y="100" font-size="100"></text></svg>
+
+<script src="fonts/tusker/bundled.js"></script>
+<script>
+// ---------------- arrugas de cartel mal pegado ----------------
+// Genera una capa RGBA (blanco para las luces, negro para las sombras) que se pone encima del cartel.
+// Todo se calcula en un espacio de 1000 unidades de ancho, así que la misma semilla da el mismo
+// resultado en la vista previa y en la exportación a 300 ppp.
+const Wrinkles=(function(){
+"use strict";
+const N=600;
+const U_REF2=1.5203;            // calibración del prototipo
+const LIGHT=(()=>{const v=[-0.6,-0.55,0.58];const n=Math.hypot(...v);return v.map(x=>x/n)})();
+const HALF=(()=>{const v=[LIGHT[0],LIGHT[1],LIGHT[2]+1];const n=Math.hypot(...v);return v.map(x=>x/n)})();
+const HZ30=Math.pow(HALF[2],30);
+
+function rngFrom(seed){
+  // mezcla la semilla para que números consecutivos den resultados independientes
+  let a=Math.imul((seed>>>0)^0x9E3779B9,0x85EBCA6B); a^=a>>>13; a=Math.imul(a,0xC2B2AE35); a^=a>>>16; a=a||1;
+  let spare=null;
+  const u=()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+  for(let i=0;i<4;i++) u();
+  return {
+    u, uni:(lo,hi)=>lo+(hi-lo)*u(), int:(lo,hi)=>lo+Math.floor(u()*(hi-lo)),
+    sign:()=>u()<0.5?-1:1,
+    normal:(m,s)=>{ if(spare!==null){const v=spare;spare=null;return m+s*v;}
+      let x,y,r; do{x=u()*2-1;y=u()*2-1;r=x*x+y*y;}while(r>=1||r===0);
+      const f=Math.sqrt(-2*Math.log(r)/r); spare=y*f; return m+s*x*f; }
+  };
+}
+const smooth=t=>{t=t<0?0:t>1?1:t;return t*t*(3-2*t)};
+const lin=n=>Float64Array.from({length:n},(_,i)=>i/(n-1));
+
+// ---------- geometría ----------
+function geometry(p,aspect){
+  const R=rngFrom(p.seed);
+  const w=1000, h=1000*aspect, D=Math.hypot(w,h), cx=w/2, cy=h/2;
+  const wobble=(t,amp,freqs)=>{const out=new Float64Array(t.length);for(const f of freqs){const A=amp*R.uni(0.5,1),ph=R.uni(0,2*Math.PI);for(let i=0;i<t.length;i++)out[i]+=A*Math.sin(2*Math.PI*f*t[i]+ph);}return out;};
+  const kinks=(t,count,size)=>{const out=new Float64Array(t.length);for(let k=0;k<count;k++){const c=R.uni(0.15,0.85),L=R.uni(0.05,0.1),d=R.sign()*R.uni(0.4,1)*size;for(let i=0;i<t.length;i++)out[i]+=d*smooth((t[i]-c)/L+0.5);}return out;};
+  const toXY=(u,v,th)=>{const n=u.length,x=new Float64Array(n),y=new Float64Array(n),c=Math.cos(th),s=Math.sin(th);for(let i=0;i<n;i++){x[i]=cx+u[i]*c+v[i]*s;y[i]=cy-u[i]*s+v[i]*c;}return [x,y];};
+  const across=th=>Math.abs(w*Math.cos(th))+Math.abs(h*Math.sin(th));
+  const along=th=>Math.abs(w*Math.sin(th))+Math.abs(h*Math.cos(th));
+  const edge=(x,y)=>{const d=Math.max(0,Math.min(x,w-x,y,h-y));return Math.exp(-d/(0.09*Math.min(w,h)));};
+
+  let dir=p.dir;
+  if(dir==="auto"){const r=R.u();dir=r<0.55?"v":r<0.8?"h":"d";}
+  const theta0=({v:0,h:Math.PI/2,d:R.sign()*35*Math.PI/180})[dir]+R.normal(0,0.12);
+  const amounts={few:[[1,2],[2,3]],normal:[[1,3],[3,5]],many:[[2,4],[5,8]]}[p.amount]||[[1,3],[3,5]];
+  const WV=0.012;
+  const ridges=[];
+  const t=lin(N);
+
+  // 1) arrugas largas de borde a borde
+  const nFull=R.int(...amounts[0]);
+  for(let i=0;i<nFull;i++){
+    const th=theta0+R.normal(0,0.12);
+    let x,y,u,v;
+    for(let attempt=0;attempt<12;attempt++){
+      v=t.map(tt=>(tt-0.5)*D);
+      const jog=kinks(t,R.int(0,3),0.045*w);
+      const u0=R.uni(-0.35,0.35)*across(th);
+      const w1=wobble(t,0.03*w,[0.4,0.9]), w2=wobble(t,WV*w,[1.8,2.7]);
+      u=t.map((_,k)=>u0+w1[k]+w2[k]+jog[k]);
+      [x,y]=toXY(u,v,th);
+      let ok=true;
+      for(const r of ridges){ if(r.kind!=="main") continue; let m=Infinity; for(let k=0;k<N;k+=3){const dd=Math.hypot(x[k]-r.x[k],y[k]-r.y[k]); if(dd<m) m=dd;} if(m<=0.08*w){ok=false;break;} }
+      if(ok) break;
+    }
+    const f=R.uni(2,4),ph=R.uni(0,6),sc=R.uni(0.85,1.15);
+    const wid=t.map((tt,k)=>(0.8+1.5*edge(x[k],y[k]))*(1+0.28*Math.sin(2*Math.PI*f*tt+ph))*sc);
+    ridges.push({x,y,wid,pres:new Float64Array(N).fill(1),amp:1,kind:"main"});
+    if(R.u()<0.45){
+      const off=R.sign()*R.uni(0.025,0.045)*w;
+      let a=R.uni(0.1,0.9),b=R.uni(0.1,0.9); if(a>b)[a,b]=[b,a];
+      if(b-a>0.2){
+        const pres=t.map(tt=>smooth((tt-a)/0.08)*smooth((b-tt)/0.08));
+        const ww=wobble(t,0.006*w,[2.0]);
+        const [x2,y2]=toXY(u.map((uu,k)=>uu+off+ww[k]),v,th);
+        ridges.push({x:x2,y:y2,wid:wid.map(q=>q*0.55),pres,amp:0.6,kind:"twin"});
+      }
+    }
+  }
+  // 2) arrugas menores: parciales (desde un borde) o interiores
+  const nMinor=R.int(...amounts[1]);
+  for(let i=0;i<nMinor;i++){
+    const th=theta0+R.normal(0,0.3);
+    const Lf=along(th);
+    const jog=kinks(t,R.int(0,2),0.03*w);
+    const u0=R.uni(-0.42,0.42)*across(th);
+    let x,y,wid,pres;
+    if(R.u()<0.5){
+      const sgn=R.sign();
+      const vEnd=sgn*R.uni(-0.25,0.2)*Lf;
+      const v=t.map(tt=>sgn*D/2+(vEnd-sgn*D/2)*tt);
+      const w1=wobble(t,0.02*w,[0.6,1.3]), w2=wobble(t,WV*0.6*w,[2.0]);
+      [x,y]=toXY(t.map((_,k)=>u0+w1[k]+w2[k]+jog[k]),v,th);
+      const sc=R.uni(0.6,0.95);
+      wid=t.map((tt,k)=>(0.7+1.3*edge(x[k],y[k]))*Math.pow(Math.max(0,1-tt),0.45)*sc);
+      pres=t.map(tt=>smooth((1-tt)/0.25));
+    }else{
+      const L=R.uni(0.2,0.5)*Lf, vc=R.uni(-0.3,0.3)*Lf;
+      const v=t.map(tt=>vc+(tt-0.5)*L);
+      const w1=wobble(t,0.015*w,[0.7,1.5]), w2=wobble(t,WV*0.5*w,[1.6]);
+      [x,y]=toXY(t.map((_,k)=>u0+w1[k]+w2[k]+jog[k]),v,th);
+      const sc=R.uni(0.5,0.85);
+      wid=t.map(tt=>Math.pow(Math.sin(Math.PI*tt),0.8)*sc);
+      pres=t.map(tt=>smooth(tt/0.15)*smooth((1-tt)/0.15));
+    }
+    const f=R.uni(1.5,3),ph=R.uni(0,6);
+    wid=wid.map((q,k)=>q*(1+0.3*Math.sin(2*Math.PI*f*t[k]+ph)));
+    ridges.push({x,y,wid,pres,amp:0.85,kind:"minor"});
+  }
+  // pliegue fino al pie de cada arruga, en el lado contrario a la luz, a tramos
+  for(const r of ridges){
+    const cyc=R.uni(4,9), ph=R.uni(0,6);
+    r.gate=t.map(tt=>smooth((Math.sin(tt*cyc*Math.PI+ph)+0.2)/0.6));
+  }
+  // 3) arruguitas finas que salen de las arrugas
+  const crinkles=[];
+  const mains=ridges.filter(r=>r.kind!=="twin");
+  const nCr=Math.round(R.int(8,15)*p.crinkles);
+  for(let i=0;i<nCr;i++){
+    const r=mains[R.int(0,mains.length)];
+    const k=R.int(10,N-10);
+    const turn=R.sign()*R.uni(0.25,0.6), flip=R.u()<0.5?Math.PI:0;
+    const L=R.uni(30,130), bend=R.normal(0,0.35);
+    if(r.pres[k]<0.5) continue;
+    const ang=Math.atan2(r.y[k+1]-r.y[k-1],r.x[k+1]-r.x[k-1])+turn+flip;
+    const M=60, x=new Float64Array(M), y=new Float64Array(M), pr=new Float64Array(M);
+    let px=r.x[k],py=r.y[k];
+    for(let j=0;j<M;j++){const tt=j/(M-1),a=ang+bend*tt;px+=Math.cos(a)*L/M;py+=Math.sin(a)*L/M;x[j]=px;y[j]=py;pr[j]=Math.pow(1-tt,0.8);}
+    crinkles.push({x,y,p:pr});
+  }
+  // ondulación suave de todo el pliego
+  const cell=16.2, lw=Math.ceil(w/cell)+1, lh=Math.ceil(h/cell)+1;
+  const low=new Float32Array(lw*lh); for(let i=0;i<low.length;i++) low[i]=R.normal(0,1);
+  blur(low,lw,lh,3);
+  return {ridges,crinkles,low:{data:low,lw,lh,cell},aspect,dir};
+}
+
+// ---------- desenfoque gaussiano (tres pasadas de caja) ----------
+function boxSizes(sigma,n){
+  const wI=Math.sqrt(12*sigma*sigma/n+1); let wl=Math.floor(wI); if(wl%2===0) wl--; const wu=wl+2;
+  const m=Math.round((12*sigma*sigma-n*wl*wl-4*n*wl-3*n)/(-4*wl-4));
+  return Array.from({length:n},(_,i)=>i<m?wl:wu);
+}
+function boxH(src,dst,w,h,r){
+  const iarr=1/(r+r+1);
+  for(let y=0;y<h;y++){
+    const row=y*w; let acc=0;
+    for(let k=-r-1;k<r;k++) acc+=src[row+Math.min(w-1,Math.max(0,k))];
+    for(let x=0;x<w;x++){
+      acc+=src[row+Math.min(w-1,x+r)]-src[row+Math.max(0,x-r-1)];
+      dst[row+x]=acc*iarr;
+    }
+  }
+}
+function boxV(src,dst,w,h,r){
+  const iarr=1/(r+r+1);
+  for(let x=0;x<w;x++){
+    let acc=0;
+    for(let k=-r-1;k<r;k++) acc+=src[Math.min(h-1,Math.max(0,k))*w+x];
+    for(let y=0;y<h;y++){
+      acc+=src[Math.min(h-1,y+r)*w+x]-src[Math.max(0,y-r-1)*w+x];
+      dst[y*w+x]=acc*iarr;
+    }
+  }
+}
+function blur(a,w,h,sigma){
+  if(sigma<0.4) return a;
+  const tmp=new Float32Array(a.length);
+  for(const s of boxSizes(sigma,3)){ const r=(s-1)>>1; if(r<1) continue; boxH(a,tmp,w,h,r); boxV(tmp,a,w,h,r); }
+  return a;
+}
+
+// ---------- rasterizado ----------
+function makeCtx(gw,gh){
+  const c=document.createElement("canvas"); c.width=gw; c.height=gh;
+  const ctx=c.getContext("2d",{willReadFrequently:true}); ctx.lineCap="round"; return ctx;
+}
+function drawPath(ctx,xs,ys,wid,pres,w0,s,offX,offY){
+  for(let k=0;k<xs.length-1;k++){
+    const a=pres[k], r=w0*s*(wid?wid[k]:1);
+    if(a<0.02||r<0.25) continue;
+    const g=Math.round(a*255);
+    ctx.strokeStyle="rgb("+g+","+g+","+g+")"; ctx.lineWidth=2*r;
+    const x0=(xs[k]+(offX?offX[k]:0))*s, y0=(ys[k]+(offY?offY[k]:0))*s;
+    const x1=(xs[k+1]+(offX?offX[k+1]:0))*s, y1=(ys[k+1]+(offY?offY[k+1]:0))*s;
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1===x0&&y1===y0?x1+0.01:x1,y1); ctx.stroke();
+  }
+}
+function accumulate(ctx,acc,weight){
+  const {width:gw,height:gh}=ctx.canvas;
+  const d=ctx.getImageData(0,0,gw,gh).data;
+  const f=weight/255;
+  for(let i=0,j=0;i<acc.length;i++,j+=4) acc[i]+=d[j]*f;
+}
+function clear(ctx){ctx.globalCompositeOperation="source-over";ctx.fillStyle="#000";ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);}
+
+function render(geo,p,gw){
+  const gh=Math.max(1,Math.round(gw*geo.aspect));
+  const s=gw/1000, WS=p.width;
+  const ctx=makeCtx(gw,gh);
+  const Hm=new Float32Array(gw*gh);
+  const layer=(fn,sigma,weight)=>{
+    const acc=new Float32Array(gw*gh);
+    fn(acc);
+    blur(acc,gw,gh,sigma*s);
+    for(let i=0;i<Hm.length;i++) Hm[i]+=weight*acc[i];
+  };
+  const ridgeLayer=(w0,extra)=>acc=>{ for(const r of geo.ridges){ clear(ctx); drawPath(ctx,r.x,r.y,r.wid,extra?extra(r).pres:r.pres,w0,s,extra?extra(r).ox:null,extra?extra(r).oy:null); accumulate(ctx,acc,r.amp); } };
+  // pliegue: desplazado hacia el lado en sombra
+  const creaseOf=r=>{
+    const n=r.x.length, ox=new Float64Array(n), oy=new Float64Array(n);
+    let mx=0,my=0; const px=new Float64Array(n), py=new Float64Array(n);
+    for(let k=0;k<n;k++){const a=Math.max(0,k-1),b=Math.min(n-1,k+1);const dx=r.x[b]-r.x[a],dy=r.y[b]-r.y[a],nn=Math.hypot(dx,dy)+1e-6;px[k]=-dy/nn;py[k]=dx/nn;mx+=px[k];my+=py[k];}
+    const sg=(mx*LIGHT[0]+my*LIGHT[1]>0)?-1:1;
+    for(let k=0;k<n;k++){const off=r.wid[k]*7.5;ox[k]=sg*px[k]*off;oy[k]=sg*py[k]*off;}
+    return {pres:r.pres.map((q,k)=>q*r.gate[k]),ox,oy};
+  };
+  layer(ridgeLayer(3.0*WS),2.5,0.25);
+  layer(ridgeLayer(7*WS),8*WS,1.6*WS);
+  layer(ridgeLayer(28*WS),45*WS,3.2*WS);
+  layer(acc=>{ for(const r of geo.ridges){ const c=creaseOf(r); clear(ctx); drawPath(ctx,r.x,r.y,null,c.pres,1.4,s,c.ox,c.oy); accumulate(ctx,acc,r.amp); } },2.4,-0.12);
+  layer(acc=>{ clear(ctx); for(const c of geo.crinkles) drawPath(ctx,c.x,c.y,null,c.p,2,s); accumulate(ctx,acc,1); },2,0.3);
+  layer(acc=>{ clear(ctx); for(const c of geo.crinkles) drawPath(ctx,c.x,c.y,null,c.p,6,s); accumulate(ctx,acc,1); },7,0.8);
+  // ondulación suave
+  const L=geo.low;
+  for(let y=0;y<gh;y++){
+    const fy=Math.min(L.lh-1.001,(y/s)/L.cell), y0=Math.floor(fy), ty=fy-y0;
+    for(let x=0;x<gw;x++){
+      const fx=Math.min(L.lw-1.001,(x/s)/L.cell), x0=Math.floor(fx), tx=fx-x0;
+      const i=y0*L.lw+x0;
+      const v=(L.data[i]*(1-tx)+L.data[i+1]*tx)*(1-ty)+(L.data[i+L.lw]*(1-tx)+L.data[i+L.lw+1]*tx)*ty;
+      Hm[y*gw+x]+=0.6*v;
+    }
+  }
+  // luz
+  const kk=18*p.relief*s/U_REF2, S=p.intensity;
+  const img=ctx.createImageData(gw,gh), o=img.data;
+  for(let y=0;y<gh;y++){
+    for(let x=0;x<gw;x++){
+      const i=y*gw+x;
+      const gx=x===0?Hm[i+1]-Hm[i]:x===gw-1?Hm[i]-Hm[i-1]:(Hm[i+1]-Hm[i-1])/2;
+      const gy=y===0?Hm[i+gw]-Hm[i]:y===gh-1?Hm[i]-Hm[i-gw]:(Hm[i+gw]-Hm[i-gw])/2;
+      const nx=-gx*kk, ny=-gy*kk, nl=Math.sqrt(nx*nx+ny*ny+1);
+      const diff=(nx*LIGHT[0]+ny*LIGHT[1]+LIGHT[2])/nl-LIGHT[2];
+      const hd=Math.max(0,(nx*HALF[0]+ny*HALF[1]+HALF[2])/nl);
+      const spec=Math.min(1,Math.max(0,Math.pow(hd,30)-HZ30))*0.8*S;
+      const sv=diff*S, j=i*4;
+      if(sv<0){
+        const dark=0.45*Math.tanh(-sv*1.8);
+        o[j]=o[j+1]=o[j+2]=0; o[j+3]=Math.round(dark*255);
+      }else{
+        const lift=0.75*Math.tanh(sv*2), a=1-(1-lift)*(1-Math.min(1,spec));
+        o[j]=o[j+1]=o[j+2]=255; o[j+3]=Math.round(a*255);
+      }
+    }
+  }
+  ctx.putImageData(img,0,0);
+  return ctx.canvas;
+}
+
+return {geometry,render};
+})();
+
+</script>
+<script>
+(function(){
+"use strict";
+// ---------------- datos ----------------
+const FONTS = [
+  {name:"Anybody", family:"Anybody", w:[50,150], g:[100,900], def:800, gq:"Anybody:wdth,wght@50..150,100..900"},
+  {name:"Saira", family:"Saira", w:[50,125], g:[100,900], def:800, gq:"Saira:wdth,wght@50..125,100..900"},
+  {name:"Archivo", family:"Archivo", w:[62,125], g:[100,900], def:800, gq:"Archivo:wdth,wght@62..125,100..900"},
+  {name:"Mona Sans", family:"Mona Sans", w:[75,125], g:[200,900], def:800, gq:"Mona+Sans:wdth,wght@75..125,200..900"},
+  {name:"League Gothic", family:"League Gothic", w:[75,100], g:null, fixedG:400, gq:"League+Gothic:wdth@75..100"},
+  {name:"Six Caps", family:"Six Caps", w:null, g:null, fixedG:400, gq:"Six+Caps"},
+  {name:"Antonio", family:"Antonio", w:null, g:[100,700], def:700, gq:"Antonio:wght@100..700"},
+  {name:"Anton", family:"Anton", w:null, g:null, fixedG:400, gq:"Anton"},
+  {name:"Bebas Neue", family:"Bebas Neue", w:null, g:null, fixedG:400, gq:"Bebas+Neue"},
+];
+const PALETTES = [
+  ["#7e918a","#ebe3d8"],["#1c1f1e","#f2efe8"],["#ebe3d8","#1f2a27"],
+  ["#c8432f","#f4e9dc"],["#e9d24a","#1b1b1b"],["#24345c","#e9b8a0"],["#f1ede4","#c8432f"]
+];
+const STRETCH_KW = [[50,"ultra-condensed"],[62.5,"extra-condensed"],[75,"condensed"],[87.5,"semi-condensed"],[100,"normal"],[112.5,"semi-expanded"],[125,"expanded"],[150,"extra-expanded"],[200,"ultra-expanded"]];
+const SAMPLES = 25;
+// resolución de descarga: ppp en formatos de imprenta, multiplicador en formatos de pantalla
+function fillRes(){
+  const unit=parseFmt($("fmt").value)[2], sel=$("res"), cur=sel.value;
+  const opts=unit==="mm"?[["300","300 ppp · imprenta"],["150","150 ppp · borrador"],["96","96 ppp · pantalla"],["custom","Otro valor…"]]
+                        :[["1","1× · tamaño del formato"],["2","2× · doble"]];
+  sel.textContent="";
+  for(const [v,t] of opts){ const o=document.createElement("option"); o.value=v; o.textContent=t; sel.appendChild(o); }
+  sel.value=opts.some(o=>o[0]===cur)?cur:opts[0][0];
+  sel.dataset.unit=unit;
+}
+function exportSize(L){
+  if(L.unit==="mm"){
+    const ppi=$("res").value==="custom"?Math.max(36,Math.min(1200,+$("resCustom").value||200)):(+$("res").value||300);
+    return {w:Math.round(L.W/25.4*ppi),h:Math.round(L.H/25.4*ppi),ppi};
+  }
+  const k=+$("res").value||1; return {w:L.W*k,h:L.H*k,ppi:null};
+}
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+
+const state = {mode:"equal"};
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
+const mText = $("mText"), mLast = $("mLast");
+let cache = new Map();
+let lastLayout = null;
+let DEF = 0;
+let raf = 0;
+let userCount = 0;
+
+// ---------------- controles ----------------
+function fillFontSelect(selectIdx){
+  const sel=$("font"); sel.textContent="";
+  const gG=document.createElement("optgroup"); gG.label="Google Fonts";
+  const gU=document.createElement("optgroup"); gU.label="Tus tipografías";
+  const gB=document.createElement("optgroup"); gB.label="Tusker incluida";
+  FONTS.forEach((f,i)=>{const o=document.createElement("option");o.value=i;o.textContent=f.name;(f.bundled?gB:f.user?gU:gG).appendChild(o)});
+  if(gB.children.length) sel.appendChild(gB);
+  if(gU.children.length) sel.appendChild(gU);
+  sel.appendChild(gG);
+  sel.value=String(selectIdx);
+}
+fillFontSelect(0);
+PALETTES.forEach(([b,f])=>{
+  const s=document.createElement("button");s.type="button";s.className="sw";s.style.background=b;
+  s.setAttribute("aria-label","Combinación "+b+" y "+f);
+  const sp=document.createElement("span");sp.style.background=f;s.appendChild(sp);
+  s.addEventListener("click",()=>{$("bgc").value=b;$("fgc").value=f;schedule()});
+  $("swatches").appendChild(s);
+});
+function font(){return FONTS[+$("font").value]}
+function syncWeightRange(keep){
+  const f=font(); const r=$("wght");
+  if(f.g){ r.min=f.g[0]; r.max=f.g[1]; r.step=10; if(!keep) r.value=f.def; }
+  r.disabled=!f.g; $("comp").disabled=!(f.g&&f.w);
+  let txt;
+  if(f.cuts) txt=f.cuts.length+" anchos cargados. En cada línea se usa el corte que mejor encaja.";
+  else {
+    const parts=[];
+    parts.push(f.w?"Anchura de "+f.w[0]+" a "+f.w[1]:"Sin eje de anchura: cada línea solo puede ajustarse con el cuerpo");
+    parts.push(f.g?"peso de "+f.g[0]+" a "+f.g[1]:"un solo peso");
+    txt=parts.join(" · ");
+  }
+  $("fontRange").textContent=txt;
+  fillEvCut();
+}
+function varSettings(f,w,g){
+  if(f.cuts) return "normal";
+  const a=[]; if(f.w&&w!=null) a.push('"wdth" '+w.toFixed(2)); if(f.g&&g!=null) a.push('"wght" '+g);
+  return a.length?a.join(", "):"normal";
+}
+syncWeightRange(false);
+
+function setMode(m){
+  state.mode=m;
+  $("modeEqual").setAttribute("aria-pressed",m==="equal");
+  $("modeFill").setAttribute("aria-pressed",m==="fill");
+  $("modeSame").setAttribute("aria-pressed",m==="same");
+  $("modeLines").setAttribute("aria-pressed",m==="lines");
+  $("lineHeightFields").hidden = m!=="lines";
+  $("sizeField").hidden = m!=="same";
+  $("modeHint").textContent = {
+    lines:"Reparte la altura entre las líneas según tus proporciones. Si una llega al límite de anchura de la fuente, el bloque deja aire para conservarlas.",
+    equal:"Todas las líneas miden lo mismo de alto. Si una palabra no llega al ancho, se abre su espaciado; si sobra alto, queda como aire.",
+    fill:"Busca el tamaño que hace que el bloque ocupe todo el alto. Las líneas que aún pueden crecer se llevan el alto sobrante.",
+    same:"Todas las líneas intentan tener el mismo cuerpo; solo cambia la anchura. Si una palabra no llega, crece."
+  }[m];
+  schedule();
+}
+$("modeEqual").addEventListener("click",()=>setMode("equal"));
+$("modeFill").addEventListener("click",()=>setMode("fill"));
+$("modeSame").addEventListener("click",()=>setMode("same"));
+$('modeLines').addEventListener('click', () => setMode('lines'));
+let lineControlsKey = '';
+function readLineHeights() {
+  try {
+    const values = JSON.parse($('lineHeights').value);
+    return Array.isArray(values) ? values.slice(0, 14).map(value =>
+      Number.isFinite(+value) ? Math.max(10, Math.min(1000, +value)) : 100) : [];
+  } catch (err) { return []; }
+}
+function syncLineHeightControls(lines) {
+  const values = readLineHeights();
+  const key = JSON.stringify(lines);
+  if (key !== lineControlsKey) {
+    lineControlsKey = key;
+    $('lineHeightControls').replaceChildren();
+    lines.forEach((text, index) => {
+      const field = document.createElement('div');
+      field.className = 'field';
+      const row = document.createElement('div');
+      row.className = 'row';
+      const label = document.createElement('label');
+      label.htmlFor = 'lineHeight' + index;
+      label.textContent = (index + 1) + ' · ' + text;
+      const output = document.createElement('output');
+      output.id = 'lineHeightOut' + index;
+      output.htmlFor = label.htmlFor;
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.id = label.htmlFor;
+      input.min = '10'; input.max = '1000'; input.step = '10';
+      input.addEventListener('input', () => {
+        const next = readLineHeights();
+        while (next.length <= index) next.push(100);
+        next[index] = +input.value;
+        $('lineHeights').value = JSON.stringify(next);
+        schedule();
+      });
+      row.append(label, output);
+      field.append(row, input);
+      $('lineHeightControls').append(field);
+    });
+  }
+  lines.forEach((text, index) => {
+    const value = values[index] ?? 100;
+    $('lineHeight' + index).value = value;
+    $('lineHeightOut' + index).textContent = value + ' %';
+  });
+}
+$('referenceLineHeights').addEventListener('click', () => {
+  const heights = readLineHeights();
+  [700, 100, 400].forEach((value, index) => heights[index] = value);
+  $('lineHeights').value = JSON.stringify(heights);
+  $('lineFit').value = 'stretch';
+  schedule();
+});
+$('resetLineHeights').addEventListener('click', () => {
+  $('lineHeights').value = '[]';
+  schedule();
+});
+$("font").addEventListener("change",()=>{syncWeightRange(false);loadAndRun()});
+$("wnew").addEventListener("click",()=>{ $("wseed").value=1+Math.floor(Math.random()*99999); schedule(); });
+["lineFit","evFooterSizing","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain","wrk","wseed","wint","wwid","wrel","wdir","wamt","wcrk",
+ "res","resCustom","stOn","evOn","evDate","evHour","evPlace","evFree","evTL","evTR","evBL","evBR","evStripPos","evSL","evSC","evSR",
+ "evLabelContent","evLabelSize","evLabelRot","evLabelAuto","evLabelBg","evLabelFg","evSize","evCut"].forEach(id=>{
+  $(id).addEventListener("input",schedule);$(id).addEventListener("change",schedule);
+});
+function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFrame(run)}
+
+async function loadAndRun(){
+  const f=font();
+  const fams=f.cuts?f.cuts.map(c=>c.family):[f.family];
+  try{ for(const fam of fams){ await document.fonts.load('900 100px "'+fam+'"', "AZÑ"); await document.fonts.load('400 100px "'+fam+'"', "AZ"); } }catch(e){}
+  cache.clear();
+  schedule();
+}
+
+// ---------------- carga de fuentes propias ----------------
+const drop=$("drop");
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("drag")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("drag")}));
+drop.addEventListener("drop",e=>{ if(e.dataTransfer&&e.dataTransfer.files.length) handleFiles([...e.dataTransfer.files]); });
+$("files").addEventListener("change",e=>{ handleFiles([...e.target.files]); e.target.value=""; });
+
+async function inflate(u8){
+  const ds=new DecompressionStream("deflate");
+  const buf=await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer();
+  return new DataView(buf);
+}
+function readFvar(dv,off){
+  const axesOff=dv.getUint16(off+4), count=dv.getUint16(off+8), size=dv.getUint16(off+10);
+  const axes={};
+  for(let i=0;i<count;i++){
+    const p=off+axesOff+i*size;
+    const tag=String.fromCharCode(dv.getUint8(p),dv.getUint8(p+1),dv.getUint8(p+2),dv.getUint8(p+3));
+    axes[tag]=[dv.getInt32(p+4)/65536, dv.getInt32(p+12)/65536];
+  }
+  return axes;
+}
+async function inspectFont(buf){
+  const dv=new DataView(buf); const sig=dv.getUint32(0);
+  const tag=(p)=>String.fromCharCode(dv.getUint8(p),dv.getUint8(p+1),dv.getUint8(p+2),dv.getUint8(p+3));
+  if(sig===0x00010000||sig===0x4F54544F||sig===0x74727565){
+    const n=dv.getUint16(4);
+    for(let i=0;i<n;i++){ const p=12+i*16; if(tag(p)==="fvar") return {fmt:sig===0x4F54544F?"opentype":"truetype",axes:readFvar(dv,dv.getUint32(p+8))}; }
+    return {fmt:sig===0x4F54544F?"opentype":"truetype",axes:null};
+  }
+  if(sig===0x774F4646){ // WOFF
+    const n=dv.getUint16(12);
+    for(let i=0;i<n;i++){
+      const p=44+i*20;
+      if(tag(p)==="fvar"){
+        const off=dv.getUint32(p+4), comp=dv.getUint32(p+8), orig=dv.getUint32(p+12);
+        if(comp<orig){ const d=await inflate(new Uint8Array(buf,off,comp)); return {fmt:"woff",axes:readFvar(d,0)}; }
+        return {fmt:"woff",axes:readFvar(dv,off)};
+      }
+    }
+    return {fmt:"woff",axes:null};
+  }
+  if(sig===0x774F4632) return {fmt:"woff2",axes:null,unknown:true};
+  throw new Error("formato no reconocido");
+}
+function cleanLabel(name){return name.replace(/\.(otf|ttf|woff2?|OTF|TTF|WOFF2?)$/,"")}
+function commonName(labels){
+  if(labels.length<2) return labels[0]||"";
+  let p=labels[0];
+  for(const l of labels) while(p&&!l.startsWith(p)) p=p.slice(0,-1);
+  p=p.replace(/[-_\s0-9]+$/,"");
+  return p||"Tus cortes";
+}
+const fontBatchIdx=new Map();
+async function handleFiles(files,opts){
+  opts=opts||{};
+  const batchKey=[...files].map(f=>f.name).sort().join("|");
+  if(fontBatchIdx.has(batchKey)){
+    const idx=fontBatchIdx.get(batchKey);
+    if(!opts.noSelect){ fillFontSelect(idx); syncWeightRange(false); loadAndRun(); }
+    return idx;
+  }
+  const statics=[], errors=[], woff2Notes=[], stored=[];
+  let lastIdx=null;
+  for(const file of files){
+    try{
+      const buf=await file.arrayBuffer();
+      const info=await inspectFont(buf);
+      stored.push({name:file.name,buf});
+      const family="Propia "+(++userCount);
+      const label=cleanLabel(file.name);
+      const ax=info.axes||{};
+      const isVar=!!(ax.wdth||ax.wght);
+      const desc={};
+      if(isVar){ desc.weight=ax.wght?Math.round(ax.wght[0])+" "+Math.round(ax.wght[1]):"400"; if(ax.wdth) desc.stretch=ax.wdth[0]+"% "+ax.wdth[1]+"%"; }
+      const face=new FontFace(family,buf,desc);
+      await face.load(); document.fonts.add(face);
+      if(info.unknown) woff2Notes.push(label);
+      if(isVar){
+        FONTS.push({name:label+" (variable)", family, user:true, w:ax.wdth||null, g:ax.wght?[Math.round(ax.wght[0]),Math.round(ax.wght[1])]:null,
+          def:ax.wght?Math.min(Math.round(ax.wght[1]),800):undefined, fixedG:400, files:[{family,buf,fmt:info.fmt}]});
+        lastIdx=FONTS.length-1;
+      } else statics.push({family,label,buf,fmt:info.fmt});
+    }catch(e){ errors.push(file.name); }
+  }
+  if(statics.length===1){
+    const s=statics[0];
+    FONTS.push({name:s.label, family:s.family, user:true, w:null, g:null, fixedG:400, files:[s]});
+    lastIdx=FONTS.length-1;
+  } else if(statics.length>1){
+    const tuskerWeight = stored[0].name.match(/^TuskerGrotesk-\d+(Medium|Semibold|Bold|Super)\.ttf$/);
+    FONTS.push({name:(tuskerWeight ? "Tusker Grotesk " + tuskerWeight[1] : commonName(statics.map(s=>s.label)))+" · "+statics.length+" anchos", user:true, w:null, g:null, fixedG:400,
+      cuts:statics.map(s=>({family:s.family,label:s.label})), files:statics});
+    lastIdx=FONTS.length-1;
+  }
+  const msgs=[];
+  if(errors.length) msgs.push("No he podido leer "+list(errors)+". Comprueba que sean archivos OTF, TTF, WOFF o WOFF2.");
+  if(woff2Notes.length) msgs.push("En los WOFF2 no puedo detectar si la fuente es variable; si lo es, carga la versión OTF o TTF.");
+  if(!opts.silent) toast(msgs.join(" "));
+  if(lastIdx!=null) fontBatchIdx.set(batchKey,lastIdx);
+  if(stored.length&&!opts.noSave) await Store.addFontBatch(stored);
+  updateSavedSum();
+  if(lastIdx!=null&&!opts.noSelect){ fillFontSelect(lastIdx); syncWeightRange(false); loadAndRun(); }
+  return lastIdx;
+}
+function updateSavedSum(){
+  const names=FONTS.filter(f=>f.user).map(f=>f.name);
+  $("savedFonts").hidden=!names.length;
+  $("savedSum").textContent=names.length?"Guardadas: "+names.join(", "):"";
+  $("savedSum").title=names.join("\n");
+}
+function toast(t){$("toast").textContent=t||""}
+
+// ---------------- guardado en este navegador ----------------
+const Store=(function(){
+  let dbp=null;
+  function db(){
+    if(dbp) return dbp;
+    dbp=new Promise((res,rej)=>{
+      try{
+        const r=indexedDB.open("cartel-a-caja",1);
+        r.onupgradeneeded=()=>r.result.createObjectStore("kv");
+        r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+      }catch(e){ rej(e); }
+    });
+    return dbp;
+  }
+  async function get(k){ try{ const d=await db(); return await new Promise((res,rej)=>{const q=d.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}); }catch(e){ return undefined; } }
+  async function set(k,v){ try{ const d=await db(); await new Promise((res,rej)=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error);}); return true; }catch(e){ return false; } }
+  async function del(k){ try{ const d=await db(); await new Promise((res,rej)=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error);}); }catch(e){} }
+  async function addFontBatch(files){
+    const batches=(await get("fonts"))||[];
+    const key=files.map(f=>f.name).sort().join("|");
+    const kept=batches.filter(b=>b.map(f=>f.name).sort().join("|")!==key);
+    kept.push(files);
+    const ok=await set("fonts",kept);
+    if(!ok) toast("No he podido guardar las fuentes en este navegador; tendrás que volver a cargarlas la próxima vez.");
+  }
+  return {get,set,del,addFontBatch};
+})();
+
+const SETTINGS_KEY="cartel-a-caja:ajustes";
+const SAVED_IDS=["lineFit","evFooterSizing","lineHeights","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain",
+  "wrk","wseed","wint","wwid","wrel","wdir","wamt","wcrk","bgOp","bgFit","fgOp","stOn","sti","stc","stg","res","resCustom",
+  "evOn","evDate","evHour","evPlace","evFree","evPreset","evTL","evTR","evBL","evBR","evStripPos","evSL","evSC","evSR",
+  "evLabelContent","evLabelSize","evLabelRot","evLabelX","evLabelY","evLabelAuto","evLabelBg","evLabelFg","evSize","evCut"];
+let restoring=true;
+function collectSettings(){
+  const o={mode:state.mode,font:font().name};
+  for(const id of SAVED_IDS){ const e=$(id); o[id]=e.type==="checkbox"?e.checked:e.value; }
+  return o;
+}
+function saveSettings(){
+  if(restoring) return;
+  try{ localStorage.setItem(SETTINGS_KEY,JSON.stringify(collectSettings())); }catch(e){}
+}
+function readSettings(){ try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null"); }catch(e){ return null; } }
+function applySettings(o){
+  if(!o) return;
+  for(const id of SAVED_IDS){
+    if(!(id in o)) continue; const e=$(id);
+    if(e.type==="checkbox") e.checked=!!o[id]; else e.value=o[id];
+    if(id==="fmt") fillRes();
+  }
+}
+
+// ---------------- imagen de fondo ----------------
+const BG={url:null,dataUrl:null,blob:null,name:""};
+function setBackground(blob,name,save){
+  if(BG.url) URL.revokeObjectURL(BG.url);
+  BG.blob=blob; BG.name=name||"imagen"; BG.dataUrl=null;
+  BG.url=blob?URL.createObjectURL(blob):null;
+  $("bgCtrls").hidden=!blob;
+  $("bgLabel").textContent=blob?BG.name+" · cambiar":"Elige o arrastra una foto o textura";
+  if(save){ if(blob) blob.arrayBuffer().then(buf=>Store.set("bg",{name:BG.name,type:blob.type,buf})); else Store.del("bg"); }
+  schedule();
+}
+function bgDataUrl(){
+  if(BG.dataUrl) return Promise.resolve(BG.dataUrl);
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{BG.dataUrl=r.result;res(r.result)};r.onerror=rej;r.readAsDataURL(BG.blob);});
+}
+$("bgFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) setBackground(f,f.name,true); e.target.value=""; });
+const bgDrop=$("bgDrop");
+["dragenter","dragover"].forEach(ev=>bgDrop.addEventListener(ev,e=>{e.preventDefault();bgDrop.classList.add("drag")}));
+["dragleave","drop"].forEach(ev=>bgDrop.addEventListener(ev,e=>{e.preventDefault();bgDrop.classList.remove("drag")}));
+bgDrop.addEventListener("drop",e=>{ const f=e.dataTransfer&&e.dataTransfer.files[0]; if(f&&f.type.startsWith("image/")) setBackground(f,f.name,true); });
+$("bgRemove").addEventListener("click",()=>setBackground(null,"",true));
+$("forgetFonts").addEventListener("click",async()=>{ await Store.del("fonts"); try{ localStorage.removeItem(SETTINGS_KEY+":font"); }catch(e){} location.reload(); });
+["bgOp","bgFit","fgOp","sti","stc","stg"].forEach(id=>{ $(id).addEventListener("input",schedule); $(id).addEventListener("change",schedule); });
+
+// ---------------- medición ----------------
+function weightAt(w,f,base,comp){
+  if(!f.g) return f.fixedG;
+  if(!f.w) return base;
+  const t=(w-f.w[0])/(f.w[1]-f.w[0]);
+  return Math.round(Math.min(f.g[1], base + (f.g[1]-base)*comp*t));
+}
+function styleText(el,fam,f,w,g,trackEm){
+  el.style.fontFamily='"'+fam+'"';
+  el.style.fontWeight=g!=null?g:400;
+  el.style.fontVariationSettings=varSettings(f,w,g);
+  el.setAttribute("letter-spacing",(trackEm*100).toFixed(3));
+}
+function canvasBearings(text,fam,w,g){
+  const wt=g!=null?g:400;
+  const m=kw=>{
+    ctx.font=wt+" "+kw+' 100px "'+fam+'"';
+    try{ if("fontStretch" in ctx) ctx.fontStretch=kw; }catch(e){}
+    ctx.textAlign="left";
+    const ch=Array.from(text);
+    const a=ctx.measureText(ch[0]), b=ctx.measureText(ch[ch.length-1]), all=ctx.measureText(text);
+    return {lb:-a.actualBoundingBoxLeft, rb:b.width-b.actualBoundingBoxRight, asc:all.actualBoundingBoxAscent, desc:Math.max(0,all.actualBoundingBoxDescent)};
+  };
+  if(w==null) return m("normal");
+  let lo=STRETCH_KW[0],hi=STRETCH_KW[STRETCH_KW.length-1];
+  for(let i=0;i<STRETCH_KW.length-1;i++){ if(w>=STRETCH_KW[i][0]&&w<=STRETCH_KW[i+1][0]){lo=STRETCH_KW[i];hi=STRETCH_KW[i+1];break;} }
+  const A=m(lo[1]), B=lo===hi?A:m(hi[1]);
+  const t= hi[0]===lo[0]?0:Math.max(0,Math.min(1,(w-lo[0])/(hi[0]-lo[0])));
+  const L=(x,y)=>x+(y-x)*t;
+  return {lb:L(A.lb,B.lb), rb:L(A.rb,B.rb), asc:L(A.asc,B.asc), desc:L(A.desc,B.desc)};
+}
+function measureLine(text,f,base,comp,trackEm,optical){
+  const key=[text,f.name,f.family||"",base,comp,trackEm,optical].join("|");
+  if(cache.has(key)) return cache.get(key);
+  const chars=Array.from(text);
+  let defs;
+  if(f.cuts) defs=f.cuts.map(c=>({fam:c.family,w:null,g:null,label:c.label}));
+  else if(f.w) defs=Array.from({length:SAMPLES},(_,i)=>{const w=f.w[0]+(f.w[1]-f.w[0])*i/(SAMPLES-1);return {fam:f.family,w,g:weightAt(w,f,base,comp)}});
+  else defs=[{fam:f.family,w:null,g:f.g?base:f.fixedG}];
+  const samples=defs.map(d=>{
+    styleText(mText,d.fam,f,d.w,d.g,trackEm); mText.textContent=text;
+    styleText(mLast,d.fam,f,d.w,d.g,0); mLast.textContent=chars[chars.length-1];
+    const n=mText.getNumberOfChars();
+    const lastAdv=mLast.getComputedTextLength();
+    const start0=mText.getStartPositionOfChar(0).x;
+    const startN=n>1?mText.getStartPositionOfChar(n-1).x:start0;
+    const adv=(startN-start0)+lastAdv;
+    const br=canvasBearings(text,d.fam,f.w?d.w:null,d.g);
+    const lb=optical?br.lb:0, rb=optical?br.rb:0;
+    return {fam:d.fam,label:d.label,w:d.w,g:d.g,u:(adv-lb-rb)/100,lb:lb/100,asc:br.asc/100,desc:br.desc/100};
+  });
+  if(f.cuts) samples.sort((a,b)=>a.u-b.u);
+  else for(let i=1;i<samples.length;i++) if(samples[i].u<samples[i-1].u) samples[i].u=samples[i-1].u+1e-6;
+  const res={text,samples,discrete:!!f.cuts,asc:Math.max(...samples.map(s=>s.asc)),desc:Math.max(...samples.map(s=>s.desc))};
+  cache.set(key,res);
+  return res;
+}
+
+// ---------------- ajuste ----------------
+// under=true: en cortes discretos, elige el corte más ancho que cabe a ese cuerpo (para Misma altura)
+function fitLine(L,Wt,S,d,under){
+  const s=L.samples, r=Wt/S, last=s[s.length-1], first=s[0];
+  let pick, size, sx=1;
+  if(L.discrete&&s.length>1){
+    let k;
+    if(under){ k=-1; for(let i=0;i<s.length;i++) if(s[i].u<=r) k=i; if(k<0) k=0; }
+    else { k=0; let best=Infinity; s.forEach((x,i)=>{const e=Math.abs(Math.log(x.u/r)); if(e<best){best=e;k=i;}}); }
+    pick=s[k];
+    sx=Math.max(1-d,Math.min(1+d,r/pick.u));
+    size=Wt/(pick.u*sx);
+  }
+  else if(r>last.u){pick=last; sx=Math.min(1+d,r/last.u); size=Wt/(last.u*sx);}
+  else if(r<first.u){pick=first; sx=Math.max(1-d,r/first.u); size=Wt/(first.u*sx);}
+  else if(s.length===1){pick=first; size=S;}
+  else{
+    let i=1; while(s[i].u<r) i++;
+    const a=s[i-1],b=s[i],t=(r-a.u)/(b.u-a.u);
+    pick={fam:a.fam, w:a.w+(b.w-a.w)*t, g:(a.g!=null?Math.round(a.g+(b.g-a.g)*t):null), u:r, lb:a.lb+(b.lb-a.lb)*t};
+    size=S;
+  }
+  return {fam:pick.fam,label:pick.label,w:pick.w,g:pick.g,lb:pick.lb,u:pick.u,sx,size,h:size*(L.asc+L.desc),
+    clampedWide:r>last.u*(1+d),clampedNarrow:r<first.u*(1-d)};
+}
+// Elige el corte más próximo y aplica solo la deformación restante.
+function fitLineToBox(line, width, height) {
+  let best = null;
+  let distance = Infinity;
+  for (const sample of line.samples) {
+    const size = height / Math.max(0.001, sample.asc + sample.desc);
+    const sx = width / Math.max(0.001, sample.u * size);
+    const score = Math.abs(Math.log(sx));
+    if (score < distance) {
+      distance = score;
+      best = {
+        fam: sample.fam, label: sample.label, w: sample.w, g: sample.g,
+        lb: sample.lb, u: sample.u, asc: sample.asc, size, sx, h: height, inkW: width
+      };
+    }
+  }
+  return best;
+}
+function totalFor(lines,Wt,S,gap){
+  const fit=lines.map(L=>fitLine(L,Wt,S,DEF,false));
+  return {fit,total:fit.reduce((a,x)=>a+x.h,0)+gap*(lines.length-1)};
+}
+
+function run(){
+  saveSettings();
+  const f=font();
+  const raw=$("txt").value.split("\n").map(s=>s.trim()).filter(Boolean).slice(0,14);
+  const lines=raw.map(s=>$("upper").checked?s.toLocaleUpperCase("es"):s);
+  syncLineHeightControls(raw);
+  const stretchLines = state.mode === 'lines' && $('lineFit').value === 'stretch';
+  $('lineFitHelp').textContent = $('lineFit').value === 'stretch'
+    ? 'Las letras se estiran para llenar exactamente el ancho y la altura que asignes a cada línea.'
+    : 'Se conservan las proporciones de la fuente. Si una línea alcanza su límite de anchura, el bloque deja aire.';
+  if (state.mode === 'lines') $('modeHint').textContent = stretchLines
+    ? 'Cada línea llena su caja. El alto disponible se reparte según las proporciones que elijas.'
+    : 'Reparte la altura entre las líneas según tus proporciones, respetando los límites de la fuente.';
+  const base=+$("wght").value, comp=+$("comp").value/100, track=+$("track").value;
+  const trackEm=track/1000;
+  DEF=+$("deform").value/100; $("deformOut").textContent=Math.round(DEF*100)+" %";
+  $("wghtOut").textContent=f.g?base:"fijo"; $("compOut").textContent=Math.round(comp*100)+" %";
+  $("trackOut").textContent=(track>0?"+":"")+track;
+  const [W,H,unit]=parseFmt($("fmt").value);
+  const m=W*(+$("margin").value)/100, gap=W*(+$("gap").value)/100;
+  $("marginOut").textContent=fmtLen(m,unit); $("gapOut").textContent=fmtLen(gap,unit);
+  if($("res").dataset.unit!==unit) fillRes();
+  $("resCustom").hidden=$("res").value!=="custom";
+  { const es=exportSize({unit,W,H}); $("resOut").textContent=es.w+" × "+es.h+" px"; }
+  const footer = $("evOn").checked && $("evPreset").value === "partida";
+  const footerLayout = footer ? layoutGameFooter(W, H, m, f) : null;
+  const footerH = footerLayout ? footerLayout.height : 0;
+  const footerGap = footerH ? W * 0.025 : 0;
+  const Wt=W-2*m, Hav=Math.max(H * 0.05, H-2*m-footerH-footerGap);
+  const notes=[];
+
+  const measured=lines.map(t=>measureLine(t,f,base,comp,trackEm,$("optical").checked));
+  let fit=[], total=0, scale=1;
+  if(measured.length){
+    if(state.mode==="equal" || state.mode==="lines"){
+      const n=measured.length;
+      const heights = readLineHeights();
+      const weights = measured.map((L, i) => state.mode === 'lines' ? (heights[i] ?? 100) / 100 : 1);
+      const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
+      const hShare=Math.max(0.001, Hav-gap*(n-1))/weightSum;
+      const hMax=measured.map(L=>(Wt/(L.samples[0].u*(1-DEF)))*(L.asc+L.desc));
+      const limits = hMax.map((height, i) => height / weights[i]);
+      const stretch = state.mode === 'lines' && $('lineFit').value === 'stretch';
+      const hT=stretch ? hShare : Math.min(hShare,...limits);
+      fit=measured.map((L, i)=>{
+        const lineHeight = hT * weights[i];
+        if (stretch) return fitLineToBox(L, Wt, lineHeight);
+        const size=lineHeight/(L.asc+L.desc);
+        const x=fitLine(L,Wt,size,DEF,true);
+        if(x.size>size*1.0005){
+          const chars=Array.from(L.text).length;
+          const iw=x.u*x.sx*size;
+          x.size=size; x.h=lineHeight;
+          if(chars>1){ x.extraLs=(Wt-iw)/(chars-1)/x.sx; x.inkW=Wt; }
+          x.opened=(Wt-iw)/Wt>0.004;
+        }
+        return x;
+      });
+      total=fit.reduce((sum, x) => sum + x.h, 0)+gap*(n-1);
+      if(!stretch && hT<hShare*0.98){
+        const lim=measured[limits.indexOf(Math.min(...limits))].text;
+        notes.push("El bloque ocupa un "+Math.round(total/Hav*100)+" % del alto disponible: "+lim+" ya está en "+(f.w||f.cuts?"su anchura más estrecha":"todo el ancho")+" y no puede crecer más. El resto queda como aire.");
+      }
+      const op=fit.map((x,i)=>x.opened?measured[i].text:null).filter(Boolean);
+      if(op.length) notes.push("En "+list(op)+" he abierto el espaciado entre letras para que llegue al ancho.");
+    } else if(state.mode==="fill"&&measured[0].discrete){
+      // con cortes sueltos el alto total no crece de forma continua: probamos muchos tamaños y nos quedamos con el que más se acerca sin pasarse
+      let best=null;
+      for(let i=0;i<=600;i++){
+        const S=Wt*0.01*Math.pow(300,i/600);
+        const r=totalFor(measured,Wt,S,gap);
+        if(r.total<=Hav&&(!best||r.total>best.total)) best=r;
+      }
+      if(!best){ best=totalFor(measured,Wt,Wt*0.01,gap); notes.push("Hay más texto del que cabe en este formato. He reducido el bloque y ya no llega a los márgenes laterales."); }
+      else if(best.total<Hav*0.97) notes.push("Con estos anchos el bloque llega al "+Math.round(best.total/Hav*100)+" % del alto. El resto queda como aire.");
+      ({fit,total}=best);
+    } else if(state.mode==="fill"){
+      let lo=Wt*0.001, hi=Wt*50;
+      const tMin=totalFor(measured,Wt,lo,gap).total, tMax=totalFor(measured,Wt,hi,gap).total;
+      if(tMin>Hav){
+        ({fit,total}=totalFor(measured,Wt,lo,gap));
+        notes.push("Hay más texto del que cabe en este formato: incluso con la anchura máxima, las líneas son demasiado altas. He reducido el bloque y ya no llega a los márgenes laterales.");
+      } else if(tMax<Hav){
+        ({fit,total}=totalFor(measured,Wt,hi,gap));
+        notes.push("Sobra alto: con la anchura más estrecha de esta familia las líneas no llenan el cartel. Añade líneas, sube la separación o elige otro formato.");
+      } else {
+        for(let i=0;i<60;i++){const mid=Math.sqrt(lo*hi); if(totalFor(measured,Wt,mid,gap).total>Hav) hi=mid; else lo=mid;}
+        ({fit,total}=totalFor(measured,Wt,lo,gap));
+      }
+    } else {
+      const S=W*(+$("size").value)/100;
+      ({fit,total}=totalFor(measured,Wt,S,gap));
+      $("sizeOut").textContent=fmtSize(S,unit);
+      if(total>Hav) notes.push("El bloque es más alto que el cartel. Baja el cuerpo base o la separación.");
+      const wide=fit.filter(x=>x.clampedWide).length;
+      if(wide) notes.push(wide===1?"Una línea no llega al ancho ni con la anchura máxima, así que ha crecido de cuerpo.":wide+" líneas no llegan al ancho ni con la anchura máxima, así que han crecido de cuerpo.");
+    }
+    if(total>Hav) scale=Hav/total;
+  }
+  draw(fit,measured,{W,H,m,gap,Wt,Hav,total,scale,f,trackEm,unit,footerH,footerLayout});
+  if(evNote) notes.push(evNote);
+  const n=$("notice"); n.hidden=!notes.length; n.textContent=notes.join(" ");
+}
+
+function list(a){return a.length<2?a.join(""):a.slice(0,-1).join(", ")+" y "+a[a.length-1]}
+function parseFmt(v){const [a,b,rest]=v.split("x");return [+a,+b,rest.trim()]}
+function fmtLen(v,unit){return unit==="mm"?v.toFixed(1).replace(".",",")+" mm":Math.round(v)+" px"}
+function fmtSize(v,unit){return unit==="mm"?(v/0.3527778).toFixed(1).replace(".",",")+" pt":Math.round(v)+" px"}
+
+// ---------------- dibujo ----------------
+function el(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
+// ---------------- arrugas: parámetros y caché ----------------
+const PREVIEW_GRID=700, EXPORT_GRID_MAX=2000;
+const wrkCache=new Map();
+function wrkParams(){
+  return {seed:Math.max(1,Math.floor(+$("wseed").value||1)), intensity:+$("wint").value/100, width:+$("wwid").value/100,
+    relief:+$("wrel").value/100, dir:$("wdir").value, amount:$("wamt").value, crinkles:+$("wcrk").value/100};
+}
+function wrkOverlay(aspect,grid){
+  const p=wrkParams();
+  const key=JSON.stringify(p)+"|"+aspect.toFixed(5)+"|"+grid;
+  if(wrkCache.has(key)) return wrkCache.get(key);
+  const geoKey=JSON.stringify({seed:p.seed,dir:p.dir,amount:p.amount,crinkles:p.crinkles})+"|"+aspect.toFixed(5);
+  let geo=wrkCache.get("geo:"+geoKey);
+  if(!geo){ geo=Wrinkles.geometry(p,aspect); wrkCache.set("geo:"+geoKey,geo); }
+  const url=Wrinkles.render(geo,p,grid).toDataURL("image/png");
+  if(grid===PREVIEW_GRID){ for(const k of [...wrkCache.keys()]) if(!k.startsWith("geo:")&&k.endsWith("|"+PREVIEW_GRID)&&wrkCache.size>40) wrkCache.delete(k); }
+  wrkCache.set(key,url);
+  return url;
+}
+function syncWrkOutputs(){
+  $("wintOut").textContent=$("wint").value+" %"; $("wwidOut").textContent=$("wwid").value+" %";
+  $("wrelOut").textContent=$("wrel").value+" %"; $("wcrkOut").textContent=$("wcrk").value+" %";
+  $("wrkBody").hidden=!$("wrk").checked;
+  $("stBody").hidden=!$("stOn").checked;
+  syncEventUi();
+}
+
+
+// Paneles por tarea: todos los controles originales siguen en su sitio.
+function selectStep(key, focus = false) {
+  document.querySelectorAll('.workflow-tabs [role="tab"]').forEach(tab => {
+    const active = tab.dataset.step === key;
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+    $(tab.getAttribute('aria-controls')).hidden = !active;
+    if (active && focus) tab.focus();
+  });
+}
+document.querySelectorAll('.workflow-tabs [role="tab"]').forEach((tab, index, tabs) => {
+  tab.addEventListener('click', () => selectStep(tab.dataset.step));
+  tab.addEventListener('keydown', event => {
+    const delta = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+    if (!delta && event.key !== 'Home' && event.key !== 'End') return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + delta + tabs.length) % tabs.length;
+    selectStep(tabs[next].dataset.step, true);
+  });
+});
+document.querySelectorAll('[name="footerStyle"]').forEach(radio => {
+  radio.addEventListener('change', () => { $('evFooterStyle').value = radio.value; schedule(); });
+});
+
+// La medida y el dibujo comparten las mismas líneas y márgenes.
+function wrapFooterText(value, face, size, width) {
+  const lines = [];
+  for (const paragraph of value.trim().split(/\r?\n/)) {
+    let line = '';
+    for (const word of paragraph.trim().split(/\s+/).filter(Boolean)) {
+      const next = line ? line + ' ' + word : word;
+      if (measureW(next, face, size, 0) <= width) { line = next; continue; }
+      if (line) { lines.push(line); line = ''; }
+      for (const char of Array.from(word)) {
+        if (line && measureW(line + char, face, size, 0) > width) {
+          lines.push(line); line = '';
+        }
+        line += char;
+      }
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+function layoutGameFooter(W, H, margin, font) {
+  const face = $('evFooterFont').value === 'sans'
+    ? { fam: 'Arial', wt: 400, vs: 'normal' } : evFace(font);
+  const pad = W * 0.025;
+  const width = W - 2 * margin;
+  const innerW = Math.max(W * 0.01, width - 2 * pad);
+  const colW = Math.max(W * 0.01, (innerW - pad) / 2);
+  const fields = [
+    ['FECHA', $('evDate').value], ['HORARIO', $('evHour').value],
+    ['LUGAR', $('evPlace').value], ['PLAZAS', $('evPlayers').value],
+    ['DURACIÓN', $('evDuration').value], ['NIVEL', $('evLevel').value]
+  ].filter(([, value]) => value.trim());
+  const description = $('evDescription').value.trim();
+  const contact = $('evFree').value.trim();
+  if (!fields.length && !description && !contact) return null;
+  const requested = W * 0.025 * (+$('evSize').value) / 100;
+  function measure(size) {
+    const rows = [];
+    for (let i = 0; i < fields.length; i += 2) {
+      const cells = fields.slice(i, i + 2).map(([label, value]) => ({
+        label, lines: wrapFooterText(value, face, size, colW)
+      }));
+      const count = Math.max(...cells.map(cell => cell.lines.length));
+      rows.push({ cells, height: (2.7 + (count - 1) * 1.2) * size });
+    }
+    const descriptionLines = description ? wrapFooterText(description, face, size * 0.8, innerW) : [];
+    const contactLines = contact ? wrapFooterText(contact, face, size * 0.8, innerW) : [];
+    const textHeight = lines => lines.length ? (lines.length * 1.2 + 0.4) * size * 0.8 : 0;
+    const height = 2 * pad + rows.reduce((sum, row) => sum + row.height, 0)
+      + textHeight(descriptionLines) + textHeight(contactLines);
+    return { face, pad, colW, rows, descriptionLines, contactLines, size, height, requested };
+  }
+  const manual = $('evFooterSizing').value === 'manual';
+  const limit = Math.max(2 * pad + W * 0.01, Math.min(
+    manual ? H * (+$('evFooterHeight').value) / 100 : H,
+    (H - 2 * margin) * 0.65));
+  let layout = measure(requested);
+  if (layout.height > limit) {
+    let low = 0, high = requested;
+    for (let i = 0; i < 24; i++) {
+      const mid = (low + high) / 2;
+      if (measure(mid).height > limit) high = mid;
+      else low = mid;
+    }
+    layout = measure(Math.max(low, 0.0001));
+  }
+  if (manual) layout.height = limit;
+  return layout;
+}
+function drawGameFooter(group, o) {
+  const layout = o.footerLayout;
+  if (!layout) return;
+  const { face, pad, colW, rows, descriptionLines, contactLines, size: fs } = layout;
+  const inverse = $('evFooterStyle').value === 'inverse';
+  const ink = $('fgc').value, paper = $('bgc').value;
+  const x = o.m, y = o.H - o.m - o.footerH;
+  group.setAttribute('data-game-footer', '1');
+  if (inverse) group.appendChild(el('rect', { x, y, width: o.Wt, height: o.footerH, fill: ink }));
+  else group.appendChild(el('line', { x1: x, x2: x + o.Wt, y1: y, y2: y, stroke: ink, 'stroke-width': o.W * 0.002 }));
+  function text(value, tx, baseline, size, label = false) {
+    const t = el('text', { x: tx, y: baseline, 'font-size': size, fill: inverse ? paper : ink, opacity: label ? 0.7 : 1 });
+    t.style.fontFamily = '"' + face.fam + '"';
+    t.style.fontWeight = face.wt;
+    t.style.fontVariationSettings = face.vs;
+    t.textContent = value;
+    group.appendChild(t);
+  }
+  const innerX = x + pad;
+  let cursor = y + pad;
+  rows.forEach(row => {
+    row.cells.forEach((cell, i) => {
+      const tx = innerX + i * (colW + pad);
+      text(cell.label, tx, cursor + fs * 0.55, fs * 0.5, true);
+      cell.lines.forEach((line, index) => text(line, tx, cursor + fs * (1.75 + index * 1.2), fs));
+    });
+    cursor += row.height;
+  });
+  for (const lines of [descriptionLines, contactLines]) {
+    lines.forEach((line, index) => text(line, innerX, cursor + fs * 0.8 * (1 + index * 1.2), fs * 0.8));
+    if (lines.length) cursor += (lines.length * 1.2 + 0.4) * fs * 0.8;
+  }
+  if (fs < layout.requested * 0.7) {
+    evNote = 'Los detalles se han reducido para dejar espacio al título. Acorta la información o baja el tamaño de los datos.';
+  }
+}
+
+// ---------------- evento: datos en esquinas, franja o etiqueta ----------------
+const SLOTS=[["date","Fecha"],["hour","Hora"],["place","Lugar"],["free","Línea libre"],["date_hour","Fecha · hora"],["hour_place","Hora · lugar"],["none","Nada"]];
+let evNote="", rowBounds=[];
+(function fillSlots(){
+  for(const id of ["evTL","evTR","evBL","evBR","evSL","evSC","evSR","evLabelContent"]){
+    const sel=$(id);
+    for(const [v,t] of SLOTS){ if(id==="evLabelContent"&&v==="none") continue; const o=document.createElement("option"); o.value=v; o.textContent=t; sel.appendChild(o); }
+  }
+})();
+function presetDefaults(p){
+  const set=(id,v)=>{$(id).value=v;};
+  const H=lastLayout?lastLayout.H:1, rb=rowBounds;
+  const between=(i)=>rb.length>i+1?((rb[i].bottom+rb[i+1].top)/2)/H*100:null;
+  if(p==="corners"){ set("evTL","date"); set("evTR","hour"); set("evBL","place"); set("evBR","free"); }
+  if(p==="strip"){ set("evStripPos","bottom"); set("evSL","date"); set("evSC","hour_place"); set("evSR","free"); }
+  if(p==="label"){ set("evLabelContent","date_hour"); set("evLabelSize",100); set("evLabelRot",0); set("evLabelX",60);
+    set("evLabelY",(rb.length>1?between(rb.length-2):66)||66); }
+  if(p==="label_strip"){ set("evLabelContent","date"); set("evLabelSize",125); set("evLabelRot",-4); set("evLabelX",78);
+    set("evLabelY",between(0)||34); set("evStripPos","bottom"); set("evSL","hour"); set("evSC","place"); set("evSR","free"); }
+}
+$("evPreset").addEventListener("change",()=>{ presetDefaults($("evPreset").value); schedule(); });
+$('evOn').addEventListener('change', () => syncEventUi());
+function fillEventSuggestions(onlyEmpty = false) {
+  const date = new Intl.DateTimeFormat('es-ES', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  }).format(new Date());
+  const suggestions = {
+    evDate: date.charAt(0).toUpperCase() + date.slice(1),
+    evHour: '17:00 – 21:00',
+    evPlace: 'La Forja (Mieres)',
+    evFree: 'MP para pedir plaza',
+    evPlayers: '4 jugadores',
+    evDuration: '120 minutos',
+    evLevel: 'Te enseñamos a jugar',
+    evDescription: 'Partida abierta en La Forja.'
+  };
+  for (const [id, value] of Object.entries(suggestions)) {
+    if (!onlyEmpty || !$(id).value.trim()) $(id).value = value;
+  }
+}
+$('fillEventSuggestions').addEventListener('click', () => {
+  fillEventSuggestions(true);
+  schedule();
+});
+function syncEventUi(){
+  const p=$("evPreset").value;
+  $('eventHelp').textContent = $('evOn').checked
+    ? 'La información está visible. Los campos vacíos no se muestran.'
+    : 'Activa esta opción para ver los datos. Puedes rellenarlos antes; los campos vacíos no se muestran.';
+  $('eventLayoutHelp').textContent = p === 'partida'
+    ? 'La zona inferior reserva espacio propio para los datos y ajusta el título encima.'
+    : 'Esta disposición utiliza fecha, hora, lugar y contacto. Plazas, duración, nivel y descripción se muestran en la zona inferior.';
+  $("gameFields").hidden=p!=="partida";
+  $("evFooterHeightField").hidden = $("evFooterSizing").value !== "manual";
+  $("evFooterHeightOut").textContent=$("evFooterHeight").value+" %";
+  document.querySelectorAll('[name="footerStyle"]').forEach(r => r.checked = r.value === $("evFooterStyle").value);
+  $("evCornersBox").hidden=p!=="corners";
+  $("evStripBox").hidden=!(p==="strip"||p==="label_strip");
+  $("evLabelBox").hidden=!(p==="label"||p==="label_strip");
+  $("evLabelColors").hidden=$("evLabelAuto").checked;
+  $("evSizeOut").textContent=$("evSize").value+" %";
+  $("evLabelSizeOut").textContent=$("evLabelSize").value+" %";
+  $("evLabelRotOut").textContent=(+$("evLabelRot").value).toString().replace(".",",")+"°";
+}
+const cutOrderCache=new Map();
+function cutOrder(f){
+  if(cutOrderCache.has(f.name)) return cutOrderCache.get(f.name);
+  const m=f.cuts.map(c=>{ styleText(mText,c.family,f,null,null,0); mText.textContent="HAMBURGEFONTS"; return {c,w:mText.getComputedTextLength()}; });
+  m.sort((a,b)=>a.w-b.w);
+  const order=m.map(x=>x.c);
+  cutOrderCache.set(f.name,order);
+  return order;
+}
+function fillEvCut(){
+  const f=font(), sel=$("evCut"), cur=sel.value;
+  $("evCutBox").hidden=!f.cuts;
+  if(!f.cuts) return;
+  sel.textContent="";
+  const a=document.createElement("option"); a.value="auto"; a.textContent="Automático (uno de los anchos)"; sel.appendChild(a);
+  for(const c of cutOrder(f)){ const o=document.createElement("option"); o.value=c.label; o.textContent=c.label; sel.appendChild(o); }
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:"auto";
+}
+function evFace(f){
+  const base=+$("wght").value;
+  if(f.cuts){
+    const order=cutOrder(f), v=$("evCut").value;
+    const pick=order.find(c=>c.label===v)||order[Math.min(order.length-1,Math.round((order.length-1)*0.65))];
+    return {fam:pick.family,vs:"normal",wt:400};
+  }
+  if(f.w){
+    const w=Math.min(f.w[1],Math.max(f.w[0],110));
+    const g=f.g?Math.min(f.g[1],Math.max(f.g[0],Math.min(base,750))):null;
+    return {fam:f.family,vs:varSettings(f,w,g),wt:g||f.fixedG||400};
+  }
+  const g=f.g?base:null;
+  return {fam:f.family,vs:varSettings(f,null,g),wt:g||f.fixedG||400};
+}
+function measureW(text,face,fs,ls){
+  mText.style.fontFamily='"'+face.fam+'"'; mText.style.fontWeight=face.wt; mText.style.fontVariationSettings=face.vs;
+  mText.setAttribute("letter-spacing",(ls/fs*100).toFixed(3)); mText.textContent=text;
+  return mText.getComputedTextLength()*fs/100;
+}
+function slotText(k){
+  const v={date:$("evDate").value.trim(),hour:$("evHour").value.trim(),place:$("evPlace").value.trim(),free:$("evFree").value.trim()};
+  const parts={date:[v.date],hour:[v.hour],place:[v.place],free:[v.free],date_hour:[v.date,v.hour],hour_place:[v.hour,v.place],none:[]}[k]||[];
+  const s=parts.filter(Boolean).join("  ·  ");
+  return $("upper").checked?s.toLocaleUpperCase("es"):s;
+}
+function drawEvent(svg,o,used){
+  evNote="";
+  if(!$("evOn").checked) return;
+  const f=o.f, face=evFace(f), W=o.W, H=o.H, m=o.m;
+  const fs=0.022*W*(+$("evSize").value)/100, ls=0.04*fs;
+  const g=el("g",{fill:$("fgc").value,"data-event":"1"});
+  const txt=(x,y,s,anchor)=>{ if(!s) return; const t=el("text",{x:x.toFixed(3),y:y.toFixed(3),"font-size":fs.toFixed(3),"letter-spacing":ls.toFixed(3),"text-anchor":anchor});
+    t.style.fontFamily='"'+face.fam+'"'; t.style.fontWeight=face.wt; t.style.fontVariationSettings=face.vs; t.textContent=s; g.appendChild(t); };
+  const bandY=(where)=>(where==="top"?m/2:H-m/2)+0.35*fs;
+  const p=$("evPreset").value;
+  if(p==="partida") drawGameFooter(g,o);
+  let usesMargins=false;
+  if(p==="corners"){
+    usesMargins=true;
+    txt(m,bandY("top"),slotText($("evTL").value),"start"); txt(W-m,bandY("top"),slotText($("evTR").value),"end");
+    txt(m,bandY("bottom"),slotText($("evBL").value),"start"); txt(W-m,bandY("bottom"),slotText($("evBR").value),"end");
+  }
+  if(p==="strip"||p==="label_strip"){
+    usesMargins=true;
+    const y=bandY($("evStripPos").value);
+    txt(m,y,slotText($("evSL").value),"start"); txt(W/2,y,slotText($("evSC").value),"middle"); txt(W-m,y,slotText($("evSR").value),"end");
+  }
+  svg.appendChild(g);
+  if(p==="label"||p==="label_strip"){
+    const s=slotText($("evLabelContent").value);
+    if(s){
+      const lfs=0.04*W*(+$("evLabelSize").value)/100, lls=0.04*lfs;
+      const tw=measureW(s,face,lfs,lls)-lls;
+      const padx=0.55*lfs, pady=0.42*lfs, bw=tw+2*padx, bh=0.72*lfs+2*pady;
+      const auto=$("evLabelAuto").checked;
+      const bgc=auto?$("bgc").value:$("evLabelBg").value, fgc=auto?$("fgc").value:$("evLabelFg").value;
+      const cx=W*(+$("evLabelX").value)/100, cy=H*(+$("evLabelY").value)/100;
+      const lg=el("g",{transform:"translate("+cx.toFixed(3)+" "+cy.toFixed(3)+") rotate("+(+$("evLabelRot").value)+")","data-evlabel":"1"});
+      lg.appendChild(el("rect",{x:(-bw/2).toFixed(3),y:(-bh/2).toFixed(3),width:bw.toFixed(3),height:bh.toFixed(3),fill:bgc,stroke:fgc,"stroke-width":(0.07*lfs).toFixed(3)}));
+      const t=el("text",{x:(-tw/2).toFixed(3),y:(0.36*lfs).toFixed(3),"font-size":lfs.toFixed(3),"letter-spacing":lls.toFixed(3),fill:fgc});
+      t.style.fontFamily='"'+face.fam+'"'; t.style.fontWeight=face.wt; t.style.fontVariationSettings=face.vs; t.textContent=s;
+      lg.appendChild(t); svg.appendChild(lg);
+    }
+  }
+  used.add(face.fam);
+  if(usesMargins&&m<fs*1.25) evNote="El margen es pequeño para los datos del evento: súbelo en Cartel o baja el tamaño de los datos.";
+}
+// arrastrar la etiqueta sobre el cartel
+(function(){
+  const svg=$("poster"); let drag=null;
+  const pt=e=>{ const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+  svg.addEventListener("pointerdown",e=>{
+    if(!e.target.closest||!e.target.closest("[data-evlabel]")||!lastLayout) return;
+    const q=pt(e); drag={dx:q.x-lastLayout.W*(+$("evLabelX").value)/100, dy:q.y-lastLayout.H*(+$("evLabelY").value)/100};
+    svg.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  svg.addEventListener("pointermove",e=>{
+    if(!drag) return; const q=pt(e), L=lastLayout;
+    $("evLabelX").value=Math.max(0,Math.min(100,(q.x-drag.dx)/L.W*100)).toFixed(2);
+    $("evLabelY").value=Math.max(0,Math.min(100,(q.y-drag.dy)/L.H*100)).toFixed(2);
+    schedule();
+  });
+  const end=e=>{ if(drag){ drag=null; try{svg.releasePointerCapture(e.pointerId);}catch(_){} schedule(); } };
+  svg.addEventListener("pointerup",end); svg.addEventListener("pointercancel",end);
+})();
+
+// ---------------- barra: nuevo, abrir, guardar, medidas ----------------
+// el cartel se ajusta al alto que deja libre la barra inferior (avisos incluidos)
+(function(){
+  const dock=document.querySelector(".dock");
+  const upd=()=>document.documentElement.style.setProperty("--dock",dock.offsetHeight+"px");
+  try{ new ResizeObserver(upd).observe(dock); }catch(e){}
+  upd();
+})();
+const UI_KEY="cartel-a-caja:paneles";
+function readUi(){ const o={}; document.querySelectorAll("details[data-box]").forEach(d=>o[d.dataset.box]=d.open); return o; }
+function applyUi(o){ if(!o) return; document.querySelectorAll("details[data-box]").forEach(d=>{ if(d.dataset.box in o) d.open=!!o[d.dataset.box]; }); }
+document.querySelectorAll("details[data-box]").forEach(d=>d.addEventListener("toggle",()=>{ try{ localStorage.setItem(UI_KEY,JSON.stringify(readUi())); }catch(e){} }));
+$("tbNew").addEventListener("click",()=>{ $("confirmNew").hidden=false; $("newOk").focus(); });
+$("newCancel").addEventListener("click",()=>{ $("confirmNew").hidden=true; });
+$("newOk").addEventListener("click",async()=>{
+  try{ localStorage.removeItem(SETTINGS_KEY); }catch(e){}
+  await Store.del("bg");
+  location.reload();
+});
+$("tbSpecs").addEventListener("click",()=>{ const d=$("specsDrawer"); d.hidden=!d.hidden; $("tbSpecs").setAttribute("aria-pressed",String(!d.hidden)); });
+function unb64(str){ const bin=atob(str), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u.buffer; }
+$("tbSave").addEventListener("click",()=>busy($("tbSave"),async()=>{
+  toast("Preparando el archivo…");
+  const batches=(await Store.get("fonts"))||[];
+  const fonts=batches.map(b=>b.map(f=>({name:f.name,data:b64(f.buf)})));
+  let background=null;
+  if(BG.blob) background={name:BG.name,type:BG.blob.type,data:b64(await BG.blob.arrayBuffer())};
+  const doc={app:"cartel-a-caja",version:1,guardado:new Date().toISOString(),settings:collectSettings(),paneles:readUi(),fonts,background};
+  const blob=new Blob([JSON.stringify(doc)],{type:"application/json"});
+  download(blob,fileBase()+".cartel.json");
+  toast("Cartel guardado ("+(blob.size/1048576).toFixed(1).replace(".",",")+" MB, con fuentes e imagen).");
+}));
+$("openFile").addEventListener("change",async e=>{
+  const file=e.target.files[0]; e.target.value="";
+  if(!file) return;
+  let doc;
+  try{ doc=JSON.parse(await file.text()); }catch(err){ toast("Ese archivo no es un cartel guardado: no he podido leerlo."); return; }
+  if(!doc||doc.app!=="cartel-a-caja"||!doc.settings){ toast("Ese archivo no es un cartel guardado con esta herramienta."); return; }
+  toast("Abriendo el cartel…");
+  restoring=true;
+  try{
+    for(const b of (doc.fonts||[])) await handleFiles(b.map(f=>({name:f.name,arrayBuffer:()=>Promise.resolve(unb64(f.data))})),{silent:true,noSelect:true});
+    if(doc.background&&doc.background.data) setBackground(new Blob([unb64(doc.background.data)],{type:doc.background.type||"image/jpeg"}),doc.background.name,true);
+    else setBackground(null,"",true);
+    const st=doc.settings;
+    $('lineHeights').value = '[]';
+    $('lineFit').value = 'natural';
+    $('evFooterSizing').value = 'auto';
+    applySettings(st);
+    const i=FONTS.findIndex(f=>f.name===st.font);
+    fillFontSelect(i>=0?i:0); syncWeightRange(false); applySettings(st);
+    setMode(st.mode||"equal");
+    applyUi(doc.paneles);
+    if(i<0&&st.font) toast("Cartel abierto, pero no venía la tipografía "+st.font+": he puesto otra.");
+    else toast("Cartel abierto: "+file.name);
+  }catch(err){ toast("No he podido abrir el cartel completo. Revisa que el archivo no esté dañado."); }
+  restoring=false; cache.clear(); loadAndRun();
+});
+
+// ---------------- tampón: el centro de la letra intacto, el borde deshecho en grano ----------------
+// Distribución del ruido de feTurbulence medida en Chromium; esta tabla la convierte en uniforme.
+const NOISE_CDF="0 0 0 0 0 0 0 0 0 0 0.001 0.001 0.002 0.004 0.006 0.01 0.016 0.024 0.034 0.047 0.063 0.083 0.105 0.13 0.159 0.19 0.226 0.265 0.308 0.355 0.406 0.46 0.515 0.558 0.611 0.659 0.705 0.747 0.785 0.819 0.849 0.876 0.9 0.921 0.939 0.954 0.967 0.976 0.984 0.99 0.993 0.996 0.998 0.999 0.999 1 1 1 1 1 1 1 1 1 1";
+function addStampFilter(defs,W,H){
+  const I=+$("sti").value/100, C=+$("stc").value/100, G=+$("stg").value/100;
+  $("stiOut").textContent=$("sti").value+" %"; $("stcOut").textContent=$("stc").value+" %"; $("stgOut").textContent=$("stg").value+" %";
+  if(!$("stOn").checked||I<=0) return false;
+  const depth=Math.max(W*0.0008, C*0.05*W);          // hasta dónde entra el efecto, en unidades del cartel
+  const cell=(0.5+G*3.5)*W/1000;                       // tamaño del grano: de grano de película a manchas
+  const f=el("filter",{id:"stamp",filterUnits:"userSpaceOnUse",x:0,y:0,width:W,height:H,"color-interpolation-filters":"sRGB"});
+  f.appendChild(el("feGaussianBlur",{in:"SourceAlpha",stdDeviation:(depth/2).toFixed(4),result:"b"}));
+  f.appendChild(el("feTurbulence",{type:"fractalNoise",baseFrequency:(0.7/cell).toFixed(5),numOctaves:String(4-Math.round(G*2)),seed:"7",result:"t"}));
+  f.appendChild(el("feColorMatrix",{in:"t",type:"matrix",values:"0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0",result:"tr"}));
+  const ct=el("feComponentTransfer",{in:"tr",result:"n"}); ct.appendChild(el("feFuncA",{type:"table",tableValues:NOISE_CDF})); f.appendChild(ct);
+  // se conserva el punto si ruido > I·(1 − profundidad): a = n + 2I·b − 2I + 0,5, umbral en 0,5
+  f.appendChild(el("feComposite",{in:"b",in2:"n",operator:"arithmetic",k1:"0",k2:(2*I).toFixed(4),k3:"1",k4:(0.5-2*I).toFixed(4),result:"m"}));
+  const th=el("feComponentTransfer",{in:"m",result:"keep"}); th.appendChild(el("feFuncA",{type:"discrete",tableValues:"0 1"})); f.appendChild(th);
+  f.appendChild(el("feComposite",{in:"SourceGraphic",in2:"keep",operator:"in"}));
+  defs.appendChild(f);
+  return true;
+}
+
+function draw(fit,measured,o){
+  const svg=$("poster"); svg.textContent="";
+  svg.setAttribute("viewBox","0 0 "+o.W+" "+o.H);
+  svg.dataset.w=o.W; svg.dataset.h=o.H; svg.dataset.unit=o.unit;
+  svg.style.setProperty("--ar",(o.W/o.H).toFixed(4));
+  const bg=$("bgc").value, fg=$("fgc").value;
+  const defs=el("defs",{});
+  if($("grain").checked){
+    const flt=el("filter",{id:"grain",x:"0",y:"0",width:"100%",height:"100%"});
+    flt.appendChild(el("feTurbulence",{type:"fractalNoise",baseFrequency:"0.9",numOctaves:"2",stitchTiles:"stitch"}));
+    flt.appendChild(el("feColorMatrix",{type:"saturate",values:"0"}));
+    defs.appendChild(flt);
+  }
+  svg.appendChild(defs);
+  svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.H,fill:bg}));
+  $("bgOpOut").textContent=$("bgOp").value+" %"; $("fgOpOut").textContent=$("fgOp").value+" %";
+  if(BG.url){
+    const bim=el("image",{x:0,y:0,width:o.W,height:o.H,preserveAspectRatio:"xMidYMid "+$("bgFit").value,opacity:(+$("bgOp").value/100).toFixed(2),"data-bg":"1"});
+    bim.setAttribute("href",BG.url);
+    svg.appendChild(bim);
+  }
+  const g=el("g",{fill:fg,opacity:(+$("fgOp").value/100).toFixed(2)});
+  const stamp=addStampFilter(defs,o.W,o.H);
+  if(stamp) g.setAttribute("filter","url(#stamp)");
+  svg.appendChild(g);
+  const k=o.scale, blockH=o.total*k;
+  let y=o.m+(o.Hav-blockH)/2;
+  const rows=[], used=new Set();
+  fit.forEach((x,i)=>{
+    const L=measured[i], size=x.size*k;
+    const inkW=x.inkW!=null?x.inkW*k:x.u*x.sx*size;
+    const ls=o.trackEm*size+(x.extraLs||0)*k;
+    const inkLeft=o.m+(o.Wt-inkW)/2;
+    const x0=inkLeft/x.sx - x.lb*size;
+    const baseline=y+(x.asc ?? L.asc)*size;
+    const t=el("text",{x:x0.toFixed(3),y:baseline.toFixed(3),"font-size":size.toFixed(3),"letter-spacing":ls.toFixed(3)});
+    if(Math.abs(x.sx-1)>1e-4) t.setAttribute("transform","scale("+x.sx.toFixed(4)+" 1)");
+    t.style.fontFamily='"'+x.fam+'"';
+    t.style.fontWeight=x.g!=null?x.g:400;
+    t.style.fontVariationSettings=varSettings(o.f,x.w,x.g);
+    t.textContent=L.text;
+    g.appendChild(t);
+    used.add(x.fam);
+    rows.push({text:L.text,size,w:x.w,g:x.g,label:x.label,sx:x.sx,track:Math.round(ls/size*1000),top:y,bottom:y+x.h*k});
+    y+=(x.h*k)+o.gap*k;
+  });
+  // Las métricas SVG pueden exceder las medidas del canvas en fuentes propias.
+  // Ajusta el bloque completo de forma proporcional al espacio reservado.
+  if (o.footerH && rows.length && !(state.mode === 'lines' && $('lineFit').value === 'stretch')) {
+    const bounds = g.getBBox();
+    if (bounds.height && (bounds.y < o.m || bounds.y + bounds.height > o.m + o.Hav)) {
+      const fitScale = Math.min(1, o.Hav / bounds.height, o.Wt / bounds.width);
+      const tx = o.m + (o.Wt - bounds.width * fitScale) / 2 - bounds.x * fitScale;
+      const ty = o.m + (o.Hav - bounds.height * fitScale) / 2 - bounds.y * fitScale;
+      g.setAttribute('transform', `translate(${tx} ${ty}) scale(${fitScale})`);
+      rows.forEach(row => {
+        row.size *= fitScale;
+        row.top = row.top * fitScale + ty;
+        row.bottom = row.bottom * fitScale + ty;
+      });
+    }
+  }
+  syncWrkOutputs();
+  rowBounds=rows.map(r=>({top:r.top,bottom:r.bottom}));
+  drawEvent(svg,o,used);
+  if($("wrk").checked){
+    const im=el("image",{x:0,y:0,width:o.W,height:o.H,preserveAspectRatio:"none","data-wrk":"1",style:"pointer-events:none"});
+    im.setAttribute("href",wrkOverlay(o.H/o.W,PREVIEW_GRID));
+    svg.appendChild(im);
+  }
+  if($("grain").checked){
+    svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.H,filter:"url(#grain)",opacity:"0.13",style:"mix-blend-mode:multiply;pointer-events:none"}));
+  }
+  lastLayout={rows,unit:o.unit,f:o.f,used:[...used],W:o.W,H:o.H};
+  renderSpecs();
+}
+function widthCell(r,f){ return f.cuts?r.label:(f.w?r.w.toFixed(1).replace(".",","):"fija"); }
+function renderSpecs(){
+  const b=$("specBody"); b.textContent="";
+  if(!lastLayout) return;
+  const L=lastLayout;
+  $("sizeHead").textContent=L.unit==="mm"?"Cuerpo (pt)":"Cuerpo (px)";
+  L.rows.forEach(r=>{
+    const tr=document.createElement("tr");
+    [r.text,fmtSize(r.size,L.unit),widthCell(r,L.f),r.g!=null?String(r.g):"del corte",(r.track>0?"+":"")+r.track,Math.round(r.sx*100)+" %"]
+      .forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+    b.appendChild(tr);
+  });
+}
+
+// ---------------- exportar ----------------
+function b64(buf){
+  const u8=new Uint8Array(buf); let s=""; const CH=0x8000;
+  for(let i=0;i<u8.length;i+=CH) s+=String.fromCharCode.apply(null,u8.subarray(i,i+CH));
+  return btoa(s);
+}
+const MIME={opentype:"font/otf",truetype:"font/ttf",woff:"font/woff",woff2:"font/woff2"};
+const googleCssCache=new Map();
+async function googleFaceCss(f){
+  if(googleCssCache.has(f.gq)) return googleCssCache.get(f.gq);
+  const css=await (await fetch("https://fonts.googleapis.com/css2?family="+f.gq+"&display=swap")).text();
+  const urls=[...new Set([...css.matchAll(/url\((https:[^)]+)\)/g)].map(m=>m[1]))];
+  let out=css;
+  for(const u of urls){
+    const buf=await (await fetch(u)).arrayBuffer();
+    out=out.split(u).join("data:font/woff2;base64,"+b64(buf));
+  }
+  googleCssCache.set(f.gq,out);
+  return out;
+}
+async function fontCss(){
+  const L=lastLayout, f=L.f;
+  if(f.files){
+    return f.files.filter(x=>L.used.includes(x.family)).map(x=>{
+      const desc=(!f.cuts&&f.w)?"font-stretch:"+f.w[0]+"% "+f.w[1]+"%;":"";
+      const wd=(!f.cuts&&f.g)?"font-weight:"+f.g[0]+" "+f.g[1]+";":"";
+      return '@font-face{font-family:"'+x.family+'";src:url(data:'+(MIME[x.fmt]||"font/otf")+';base64,'+b64(x.buf)+') format("'+x.fmt+'");'+desc+wd+'}';
+    }).join("\n");
+  }
+  return await googleFaceCss(f);
+}
+async function buildSvg(){
+  const src=$("poster"), c=src.cloneNode(true);
+  c.removeAttribute("style"); c.removeAttribute("id"); c.removeAttribute("role"); c.removeAttribute("aria-label");
+  const u=src.dataset.unit==="mm"?"mm":"px";
+  c.setAttribute("width",src.dataset.w+u); c.setAttribute("height",src.dataset.h+u);
+  ["data-w","data-h","data-unit"].forEach(a=>c.removeAttribute(a));
+  const bimg=c.querySelector('image[data-bg]');
+  if(bimg){ bimg.setAttribute("href",await bgDataUrl()); bimg.removeAttribute("data-bg"); }
+  const wimg=c.querySelector('image[data-wrk]');
+  if(wimg){
+    const L=lastLayout;
+    const pxW=exportSize(L).w;
+    toast("Calculando las arrugas a resolución de imprenta…");
+    await new Promise(r=>setTimeout(r,30));
+    wimg.setAttribute("href",wrkOverlay(L.H/L.W,Math.min(EXPORT_GRID_MAX,pxW)));
+    wimg.removeAttribute("data-wrk");
+  }
+  let embedded=true;
+  try{
+    const css=await fontCss();
+    const st=document.createElementNS(NS,"style"); st.textContent=css;
+    c.querySelector("defs").appendChild(st);
+  }catch(e){ embedded=false; }
+  return {text:new XMLSerializer().serializeToString(c),embedded};
+}
+function fileBase(){
+  const s=(lastLayout?lastLayout.rows.map(r=>r.text).join("-"):"cartel").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+  return "cartel-"+(s||"sin-titulo");
+}
+function download(blob,name){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+async function busy(btn,fn){ btn.disabled=true; try{ await fn(); } finally{ btn.disabled=false; } }
+
+$("dlSvg").addEventListener("click",()=>busy($("dlSvg"),async()=>{
+  toast("Preparando el SVG…");
+  const {text,embedded}=await buildSvg();
+  download(new Blob([text],{type:"image/svg+xml"}),fileBase()+".svg");
+  toast(embedded?"SVG descargado con la tipografía incrustada.":"SVG descargado, pero no he podido incrustar la tipografía (¿sin conexión?). Se verá bien solo donde esté instalada.");
+}));
+$("dlPng").addEventListener("click",()=>busy($("dlPng"),async()=>{
+  toast("Preparando el PNG…");
+  const {text,embedded}=await buildSvg();
+  if(!embedded){ toast("No he podido incrustar la tipografía, así que el PNG saldría con otra letra. Revisa la conexión (las fuentes de Google se descargan al exportar) y vuelve a probar."); return; }
+  const L=lastLayout;
+  const es=exportSize(L), pxW=es.w, pxH=es.h;
+  const url=URL.createObjectURL(new Blob([text],{type:"image/svg+xml"}));
+  const load=()=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url;});
+  try{
+    await load(); await new Promise(r=>setTimeout(r,250)); // primera carga: deja que el SVG registre sus fuentes
+    const img=await load();
+    const cv=document.createElement("canvas"); cv.width=pxW; cv.height=pxH;
+    const cx=cv.getContext("2d"); cx.drawImage(img,0,0,pxW,pxH);
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    if(es.ppi) download(await setPngDpi(blob,es.ppi),fileBase()+".png");
+    else download(blob,fileBase()+".png");
+    toast("PNG descargado: "+pxW+" × "+pxH+" px.");
+  }catch(e){ toast("No he podido generar el PNG. Prueba con el SVG."); }
+  finally{ URL.revokeObjectURL(url); }
+}));
+// Añade el bloque pHYs para que el PNG declare 300 ppp
+async function setPngDpi(blob,dpi){
+  const buf=new Uint8Array(await blob.arrayBuffer());
+  const ppm=Math.round(dpi/0.0254);
+  const chunk=new Uint8Array(21); const dv=new DataView(chunk.buffer);
+  dv.setUint32(0,9); chunk.set([0x70,0x48,0x59,0x73],4); dv.setUint32(8,ppm); dv.setUint32(12,ppm); chunk[16]=1;
+  dv.setUint32(17,crc32(chunk.subarray(4,17)));
+  const out=new Uint8Array(buf.length+21);
+  out.set(buf.subarray(0,33),0); out.set(chunk,33); out.set(buf.subarray(33),54);
+  return new Blob([out],{type:"image/png"});
+}
+let CRC_T=null;
+function crc32(u8){
+  if(!CRC_T){CRC_T=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRC_T[n]=c>>>0;}}
+  let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0;
+}
+
+$("copySpecs").addEventListener("click",async()=>{
+  if(!lastLayout) return;
+  const L=lastLayout;
+  const head="Tipografía: "+L.f.name+"\n";
+  const body=L.rows.map(r=>r.text+"  ·  cuerpo "+fmtSize(r.size,L.unit)+"  ·  "+(L.f.cuts?"corte "+r.label:(L.f.w?"anchura "+r.w.toFixed(1).replace(".",","):"anchura fija"))+(r.g!=null?"  ·  peso "+r.g:"")+"  ·  tracking "+r.track+(Math.abs(r.sx-1)>0.004?"  ·  escala horizontal "+Math.round(r.sx*100)+" %":"")).join("\n");
+  try{ await navigator.clipboard.writeText(head+body); toast("Medidas copiadas al portapapeles."); }
+  catch(e){ toast("No he podido copiar. Tu navegador bloquea el portapapeles en este contexto."); }
+});
+
+// Fuentes incluidas: un grupo de anchos por peso, igual que en la carga manual.
+const bundledTusker = [["TuskerGrotesk-1500Medium.ttf", "TuskerGrotesk-2500Medium.ttf", "TuskerGrotesk-3500Medium.ttf", "TuskerGrotesk-4500Medium.ttf", "TuskerGrotesk-5500Medium.ttf", "TuskerGrotesk-6500Medium.ttf"], ["TuskerGrotesk-1600Semibold.ttf", "TuskerGrotesk-2600Semibold.ttf", "TuskerGrotesk-3600Semibold.ttf", "TuskerGrotesk-4600Semibold.ttf", "TuskerGrotesk-5600Semibold.ttf", "TuskerGrotesk-6600Semibold.ttf", "TuskerGrotesk-7600Semibold.ttf"], ["TuskerGrotesk-1700Bold.ttf", "TuskerGrotesk-2700Bold.ttf", "TuskerGrotesk-3700Bold.ttf", "TuskerGrotesk-4700Bold.ttf", "TuskerGrotesk-5700Bold.ttf", "TuskerGrotesk-6700Bold.ttf", "TuskerGrotesk-7700Bold.ttf", "TuskerGrotesk-8700Bold.ttf"], ["TuskerGrotesk-1800Super.ttf", "TuskerGrotesk-2800Super.ttf", "TuskerGrotesk-3800Super.ttf", "TuskerGrotesk-4800Super.ttf", "TuskerGrotesk-5800Super.ttf", "TuskerGrotesk-6800Super.ttf", "TuskerGrotesk-7800Super.ttf", "TuskerGrotesk-8800Super.ttf", "TuskerGrotesk-9800Super.ttf"]];
+async function loadBundledTusker() {
+  for (const group of bundledTusker) {
+    const files = group.map(name => ({
+      name,
+      arrayBuffer: () => Promise.resolve(unb64(window.forjaTuskerFonts[name]))
+    }));
+    const idx = await handleFiles(files, { silent: true, noSelect: true });
+    if (idx == null || FONTS[idx].files.length !== group.length) throw new Error('Tusker incompleta');
+    FONTS[idx].bundled = true;
+  }
+}
+$('loadTusker').addEventListener('click', () => {
+  const idx = FONTS.findIndex(f => f.bundled && f.name.includes('Super'));
+  if (idx < 0) {
+    toast('No se ha podido cargar Tusker. Comprueba que fonts/tusker/bundled.js acompaña al editor.');
+    return;
+  }
+  fillFontSelect(idx);
+  syncWeightRange(false);
+  loadAndRun();
+});
+
+(async function init(){
+  fillRes();
+  presetDefaults("corners");
+  try{ applyUi(JSON.parse(localStorage.getItem(UI_KEY)||"null")); }catch(e){}
+  fillEventSuggestions();
+  const saved=readSettings();
+  applySettings(saved);
+  try{
+    const batches=(await Store.get("fonts"))||[];
+    for(const b of batches) await handleFiles(b.map(f=>({name:f.name,arrayBuffer:()=>Promise.resolve(f.buf)})),{silent:true,noSave:true,noSelect:true});
+  }catch(e){}
+  try{
+    const b=await Store.get("bg");
+    if(b&&b.buf) setBackground(new Blob([b.buf],{type:b.type||"image/jpeg"}),b.name,false);
+  }catch(e){}
+  try {
+    await loadBundledTusker();
+  } catch (err) {
+    toast('No se ha podido cargar Tusker. Comprueba que fonts/tusker/bundled.js acompaña al editor.');
+  }
+  let idx=0;
+  if(saved&&saved.font){ const i=FONTS.findIndex(f=>f.name===saved.font); if(i>=0) idx=i; }
+  fillFontSelect(idx);
+  syncWeightRange(false);
+  applySettings(saved);           // de nuevo, ya con el rango de peso de la fuente elegida
+  setMode(saved&&saved.mode?saved.mode:"equal");
+  try {
+    const pending = sessionStorage.getItem('forja:partida-tipografica');
+    if (pending) {
+      applySettings({ ...JSON.parse(pending), evPreset: "partida" });
+      selectStep("partida");
+      document.querySelector('details[data-box="evento"]').open = true;
+      sessionStorage.removeItem('forja:partida-tipografica');
+    }
+  } catch (err) { toast('No se han podido recuperar los datos de la partida.'); }
+  restoring=false;
+  saveSettings();
+  loadAndRun();
+  document.fonts.ready.then(()=>{cache.clear();schedule()});
+})();
+})();
+</script>
+</body>
+</html>

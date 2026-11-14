@@ -118,8 +118,18 @@
   .project-buttons { display: flex; gap: 8px; margin-bottom: 16px; }
   .project-buttons button { flex: 1; padding: 10px; font-weight: 600; }
 </style>
+<link rel="stylesheet" href="editors.css">
 </head>
-<body>
+<body data-editor="partidas">
+<nav class="editor-nav" aria-label="Editores de carteles">
+  <a class="editor-brand" href="index.html">Carteles La Forja</a>
+  <div class="editor-modes">
+    <a href="index.html" aria-current="page">Partidas</a>
+    <a href="tipografico.html">Tipográfico</a>
+  </div>
+  <button type="button" id="abrirTipografico">Usar esta partida en Tipográfico →</button>
+</nav>
+
 
 <h1>Generador de carteles para partidas de juegos de mesa</h1>
 
@@ -855,6 +865,31 @@ document.getElementById('descargarWebpBtn').addEventListener('click', () => {
     document.body.removeChild(link);
   } catch (err) {
     alert('No se pudo generar el WebP: ' + err.message);
+  }
+});
+
+// ---------- Continuar en el editor tipográfico ----------
+document.getElementById('abrirTipografico').addEventListener('click', () => {
+  if (!confirm('Se copiarán el título, la descripción, la fecha, el horario, el lugar y las plazas al editor tipográfico, sustituyendo esos textos. ¿Continuar?')) return;
+  const value = id => document.getElementById(id).value;
+  const evento = {
+    txt: value('titulo'),
+    evOn: true,
+    evDate: formatFecha(value('fecha')),
+    evHour: [value('hora'), value('horaFin')].filter(Boolean).join(' - '),
+    evPlace: value('lugar'),
+    evPlayers: value('plazas'),
+    evDuration: '',
+    evLevel: value('bggDificultad') ? 'BGG ' + value('bggDificultad') + ' / 5' : '',
+    evDescription: value('descripcion'),
+    evFree: ''
+  };
+  try {
+    sessionStorage.setItem('forja:partida-tipografica', JSON.stringify(evento));
+    saveConfig();
+    window.location.href = 'tipografico.html';
+  } catch (err) {
+    alert('No se han podido transferir los datos. Comprueba que el navegador permite el almacenamiento local.');
   }
 });
 

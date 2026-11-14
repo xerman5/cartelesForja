@@ -1,0 +1,195 @@
+CARTEL A CAJA
+=============
+
+Herramienta para componer carteles tipográficos en los que cada línea ocupa todo el ancho.
+El editor está en tipografico.html y comparte la navegación de Carteles La Forja.
+
+
+CÓMO USARLA
+-----------
+
+En tu ordenador:
+  Abre tipografico.html con un navegador actualizado. La familia Tusker incluida se carga automáticamente,
+  también sin servidor. Conserva la carpeta fonts/ junto al editor.
+
+En tu hosting:
+  Sube los HTML, editors.css, docs/ y fonts/ a tu web y abre su dirección en el navegador.
+  No necesita base de datos ni nada más.
+
+
+EL PANEL
+--------
+
+Los ajustes se agrupan en cuatro pestañas. Puedes recorrerlas con las flechas del
+teclado, Inicio y Fin. Dentro de cada pestaña, las cajas se pliegan pulsando su título.
+
+01 · Texto          Título, reparto entre líneas, tipografía y ajustes de la tinta.
+02 · Estilo         Colores, papel, grano, imagen de fondo y arrugas del pegado.
+03 · Información    Zona inferior con los detalles de la partida, u otras disposiciones.
+04 · Formato        Tamaño del cartel, resolución de descarga y margen.
+
+ALTURA POR LÍNEA
+---------------
+
+En Texto → Reparto, elige «Por línea». Cada línea no vacía tiene un deslizador
+entre el 10 % y el 1000 %. Son proporciones: al 200 % mide el doble de alto que
+al 100 %. Por ejemplo, usa 200 % para el título del juego y 100 % para el resto.
+
+En «Ajuste a la caja» puedes elegir:
+
+  Llenar cada caja    Elige el corte de fuente que necesita menos deformación y
+                     estira las letras hasta ocupar todo el ancho y la altura
+                     asignada. Permite títulos muy altos y franjas muy bajas.
+  Conservar          Respeta las proporciones de la fuente. Si una línea alcanza
+                     su anchura más estrecha, el bloque deja aire para mantener
+                     las alturas relativas.
+
+«Alturas como la referencia · 7 : 1 : 4» asigna 700 %, 100 % y 400 % a las tres
+primeras líneas y activa el ajuste para llenar cada caja. Puedes cambiar después
+cada altura. Para una composición como OATH / NEW FOUNDATIONS / PREVIEW, usa
+Tusker Super, un margen pequeño y poca separación entre líneas. El formato
+50 × 80 cm ofrece una proporción vertical similar. La zona de información puede
+ocultarse o añadirse debajo; el título se ajustará al espacio restante.
+
+Los ajustes siguen el orden de las líneas no vacías, hasta un máximo de catorce.
+«Igualar todas las alturas» vuelve a 100 %. Puedes cambiar a otro reparto y volver
+sin perderlos. Se conservan al recargar, guardar y abrir un proyecto JSON.
+
+ZONA INFERIOR
+-------------
+
+En Información, activa «Mostrar información en el cartel» y elige la disposición
+«Zona inferior». Añade fecha, horario, lugar, plazas, duración, nivel, descripción
+y contacto o inscripción. Los campos vacíos no aparecen.
+
+Los carteles nuevos incluyen sugerencias editables: la fecha de hoy, horario,
+La Forja (Mieres), plazas, duración, nivel, descripción y contacto. Al abrir un
+proyecto se conservan sus datos, incluidos los campos que dejaste vacíos.
+«Completar campos vacíos con sugerencias» rellena solo los campos sin contenido.
+
+La altura es automática: depende de los campos rellenados y de las líneas que
+ocupa su contenido. Mantiene un margen interior y una separación respecto al
+título; si no hay datos, no reserva espacio. La descripción y el contacto respetan
+los saltos de línea. Los textos largos se reparten en varias líneas.
+
+El título se ajusta al espacio restante. En «Diseño de la zona inferior» puedes
+elegir una fuente sencilla o la del título y usar el mismo papel o un fondo de
+contraste. «Tamaño de los datos» cambia el cuerpo del texto y, con él, la altura.
+Si hay mucha información, el editor reduce el texto para conservar espacio para
+el título. Aparece un aviso si queda demasiado pequeño.
+
+También puedes elegir altura «Manual» y reservar entre el 18 % y el 42 % del
+cartel. La selección automática o manual se guarda con el proyecto.
+
+Las otras disposiciones (esquinas, etiqueta y franja) utilizan fecha, hora, lugar
+y contacto. Los campos adicionales se conservan al cambiar de disposición.
+Los datos y el diseño se guardan con el proyecto y se incluyen en PNG y SVG.
+
+El cartel queda fijo a la derecha; en móvil aparece antes de los controles.
+Debajo tiene la barra de acciones:
+
+  Nuevo      Empieza un cartel desde cero. Siempre pide confirmación.
+             Tus fuentes guardadas se mantienen.
+  Abrir      Abre un cartel guardado (.cartel.json).
+  Guardar    Descarga un .cartel.json con TODO: ajustes, fuentes e imagen de fondo.
+             Se abre igual en cualquier navegador u ordenador.
+             Ojo: como lleva las fuentes dentro, compartirlo equivale a compartir la fuente.
+  PNG / SVG  Descargas.
+  Medidas    Tabla para rehacer el cartel en Illustrator o InDesign.
+
+
+TUS TIPOGRAFÍAS (por ejemplo, Tusker Grotesk)
+---------------------------------------------
+
+1. Pulsa el botón + junto a la familia, o arrastra los archivos sobre él (OTF, TTF, WOFF o WOFF2).
+2. Para una familia con varios anchos, carga a la vez todos los anchos de UN MISMO PESO.
+   Ejemplo con Tusker Grotesk: todos los "Super" (1800, 2800, 3800 ... 9800).
+3. La herramienta los ordena sola de más estrecho a más ancho y, en cada línea,
+   usa el corte que mejor encaja. La tabla de Medidas te dice qué corte va en cada línea.
+
+Las fuentes se leen en tu navegador y no se suben a ningún sitio. Se guardan en ese
+navegador, así que la próxima vez ya estarán cargadas. "Olvidar" las borra.
+
+Si una fuente es variable, cárgala en OTF o TTF para que la herramienta detecte sus ejes.
+En WOFF2 no puede detectarlos y la tratará como una fuente de un solo ancho.
+
+
+RESOLUCIÓN
+----------
+
+En formatos de imprenta (A3, A2, 50 × 70): 300 ppp para imprimir, 150 ppp de borrador,
+96 ppp para compartir online rápido, u otro valor. Al lado ves el tamaño en píxeles.
+En formatos de pantalla (Instagram, Historia): tamaño normal (1×) o doble (2×).
+
+
+TAMPÓN (en Tipografía)
+----------------------
+
+Las letras quedan perfectas en el centro y se deshacen en grano hacia los bordes,
+como un sello con menos tinta en el contorno. Por el grano se ve lo que hay detrás.
+
+  Intensidad         Cuánto se deshace el borde.
+  Contorno           Cuánto se mete el efecto hacia el interior de cada letra.
+  Tamaño del grano   De grano fino de película (a la izquierda) a manchas más gruesas.
+
+En la vista previa el grano fino se ve más gordo, porque la pantalla no tiene resolución
+para mostrarlo. En el PNG sale con su tamaño real.
+
+
+PAPEL Y PEGADO
+--------------
+
+Imagen: una foto o textura que hace de papel, por encima del color del papel y por
+debajo del texto. Opacidad de 0 a 100; cubre todo el cartel o se muestra entera.
+
+Pegado: las arrugas del papel encolado en la pared.
+  Semilla            Cada número da un juego de arrugas distinto. "Otra" elige uno al azar.
+  Intensidad         Cuánto se nota el efecto.
+  Anchura / Relieve  Arrugas más finas o más anchas, y cuánto se levantan.
+  Más                Dirección, cantidad de arrugas y arruguitas finas.
+
+Al descargar, las arrugas se recalculan a la resolución elegida: tarda unos segundos.
+
+
+EVENTO
+------
+
+Escribe fecha, hora, lugar y una línea libre (por ejemplo, tu cuenta o dónde inscribirse)
+y elige la disposición:
+
+  Esquinas                  Un dato en cada esquina, en los márgenes. Eliges cuál va en cada una.
+  Etiqueta                  Una pegatina sobre el bloque de texto.
+  Franja                    Una línea en el margen inferior o superior, en tres columnas.
+  Etiqueta girada y franja  La fecha en la etiqueta y el resto en la franja.
+
+La etiqueta se coloca arrastrándola sobre el cartel. Tiene tamaño, giro y colores propios
+(por defecto, los del papel y la tinta).
+Los datos usan la misma familia del cartel; con varios anchos, uno de los anchos para que
+se lean bien a tamaño pequeño (puedes elegir cuál). Van impresos en el mismo papel,
+así que las arrugas también les afectan. Si el margen es pequeño para ellos, te avisa.
+
+
+ÚLTIMA CONFIGURACIÓN
+--------------------
+
+Aunque no guardes, la herramienta recuerda los ajustes, las fuentes y la imagen de fondo
+en el navegador que uses. Si borras los datos de navegación, también se borran: para
+conservar un cartel de verdad, usa Guardar.
+
+Si abres el index.html con doble clic, cada ubicación del archivo cuenta como "sitio"
+distinto: si lo mueves de carpeta, empezará de cero (tus .cartel.json siguen sirviendo).
+
+
+EXPORTAR
+--------
+
+PNG   A la resolución elegida en Cartel. En formatos de imprenta lleva los ppp anotados.
+SVG   Vectorial, con la tipografía incrustada. Las arrugas y el fondo van dentro como imagen.
+      Como lleva la fuente dentro, compartirlo equivale a compartir la fuente.
+
+
+CONEXIÓN A INTERNET
+-------------------
+
+Las tipografías de Google Fonts (Anybody, Saira, League Gothic...) necesitan conexión,
+también para exportarlas. Tus propias fuentes funcionan sin conexión.

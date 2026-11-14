@@ -1,0 +1,119 @@
+.editor-nav {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  width: 100%;
+  padding: 12px 20px;
+  background: #202724;
+  color: #f0f0f0;
+  border-bottom: 1px solid #46524b;
+  font: 14px/1.4 Inter, system-ui, sans-serif;
+}
+.editor-nav a { color: inherit; text-decoration: none; }
+.editor-brand { font-weight: 700; }
+.editor-modes { display: flex; gap: 4px; }
+.editor-modes a, .editor-nav button, .editor-help {
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+.editor-modes a[aria-current="page"] { background: #d7e8df; color: #18231e; }
+.editor-nav button, .editor-nav .editor-help {
+  margin-left: auto;
+  border-color: #6d8074;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.editor-nav a:hover, .editor-nav button:hover { background: #3e5146; color: white; }
+.editor-nav :focus-visible { outline: 2px solid #b6d5c4; outline-offset: 3px; }
+body[data-editor="partidas"] > .editor-nav { max-width: 1150px; border-radius: 8px; }
+body[data-editor="tipo"] .stage { top: 0; }
+body[data-editor="tipo"] .panel { padding-top: 24px; gap: 20px; }
+.workflow-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.workflow-tabs button {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 2px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font: 600 12px var(--f-body);
+  cursor: pointer;
+}
+.workflow-tabs button span { font: 10px var(--f-mono); opacity: .7; }
+.workflow-tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-fg); }
+.workflow-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.workflow-panel { display: flex; flex-direction: column; gap: 14px; }
+.step-caption { color: var(--muted); font-size: 12px; margin: 0; }
+.workflow-panel .box > summary .num { display: none; }
+.workflow-panel .box > summary { padding: 14px; }
+.workflow-panel .box-body { gap: 18px; }
+.effect-options { padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.effect-options > div > .sub { padding: 0; border: 0; }
+.game-fields { display: flex; flex-direction: column; gap: 16px; }
+.footer-styles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.footer-styles label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.footer-styles label:has(input:checked) { border-color: var(--accent); background: var(--bg); }
+.footer-styles input { accent-color: var(--accent); }
+@media (max-width: 600px) {
+  .editor-nav { padding: 12px; gap: 10px; }
+  .editor-brand { width: 100%; }
+  .editor-nav button, .editor-nav .editor-help { margin-left: 0; }
+}
+
+/* Controles amplios y nombres visibles también con zoom o en móvil. */
+body[data-editor="tipo"] .event-toggle {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  font-weight: 600;
+  cursor: pointer;
+}
+body[data-editor="tipo"] .event-toggle input { flex: none; width: 20px; height: 20px; }
+body[data-editor="tipo"] .footer-styles { margin: 0; padding: 0; border: 0; min-width: 0; }
+.footer-styles legend { margin-bottom: 8px; font-weight: 500; }
+body[data-editor="tipo"] .toolbar { flex-wrap: wrap; justify-content: center; max-width: 100%; }
+body[data-editor="tipo"] .iconbtn { min-height: 44px; min-width: 44px; justify-content: center; }
+body[data-editor="tipo"] .workflow-tabs button { min-height: 54px; }
+@media (max-width: 760px) {
+  body[data-editor="tipo"] .iconbtn span.lbl { display: inline; }
+  body[data-editor="tipo"] .stage { position: relative; height: auto; max-height: none; }
+}
+@media (max-width: 380px) {
+  body[data-editor="tipo"] .two { grid-template-columns: 1fr; }
+  body[data-editor="tipo"] .toolbar .sep { display: none; }
+}
+@media (min-width: 761px) {
+  body[data-editor="tipo"] .stage { height: calc(100dvh - 76px); }
+  body[data-editor="tipo"] #poster {
+    width: min(100%, calc((100dvh - 76px - var(--dock) - 24px) * var(--ar, .707)));
+  }
+}
+
+.line-modes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#lineHeightControls .row label { min-width: 0; overflow-wrap: anywhere; }
+#lineHeightControls output { flex-shrink: 0; }
