@@ -24,7 +24,7 @@ Los ajustes se agrupan en cuatro pestañas. Puedes recorrerlas con las flechas d
 teclado, Inicio y Fin. Dentro de cada pestaña, las cajas se pliegan pulsando su título.
 
 01 · Texto          Título, reparto entre líneas, tipografía y ajustes de la tinta.
-02 · Estilo         Colores, papel, grano, imagen de fondo y arrugas del pegado.
+02 · Estilo         Colores, papel, grano, imagen en el fondo o las letras y arrugas del pegado.
 03 · Información    Zona inferior con los detalles de la partida, u otras disposiciones.
 04 · Formato        Tamaño del cartel, resolución de descarga y margen.
 
@@ -176,21 +176,76 @@ https://colorhunt.co/palettes/pink-orange
 https://colorhunt.co/palettes/blue-brown
 https://colordrop.io/palette/1121
 
-Imagen: una foto o textura que hace de papel, por encima del color del papel y por
-debajo del texto. Opacidad de 0 a 100; cubre todo el cartel o se muestra entera.
+Imagen: una foto o textura. Tras subirla, «Aplicar imagen a» permite elegir:
+  Fondo    Se coloca por encima del color del papel y por debajo del texto, como antes.
+  Letras   Rellena las letras del título; el fondo conserva el color del papel.
+           La imagen mantiene un encuadre continuo entre todas las líneas.
+           Los datos del evento y el anexo mantienen sus colores habituales.
+
+Opacidad de 0 a 100; cubre todo el cartel o se muestra entera. En Letras, bajar la
+opacidad de la imagen deja ver el color de tinta; la opacidad de la tinta controla
+todo el relleno. El tampón y las arrugas también se pueden combinar con este modo.
 «Zoom de la imagen» permite reducirla hasta el 10 % o ampliarla hasta el 500 %,
 siempre desde el centro y conservando sus proporciones. Cada imagen nueva empieza
 al 100 %. «Restablecer zoom al 100 %» vuelve al encaje inicial. El espacio libre
-muestra el color del papel; lo que excede el cartel se recorta, sin invadir el anexo.
-El zoom se conserva al recargar y al guardar o abrir un JSON, y se aplica al PNG y SVG.
+muestra el color del papel en Fondo o el de la tinta en Letras; lo que excede el
+cartel se recorta, sin invadir el anexo. Quitar la imagen recupera la tinta de color.
+El destino, la opacidad, el encaje y el zoom se conservan al recargar y al guardar
+o abrir un JSON, y se aplican al PNG y SVG. Los proyectos anteriores conservan la
+imagen en Fondo. La imagen y las fuentes se incrustan en los archivos exportados.
 
-Pegado: las arrugas del papel encolado en la pared.
+Pegado permite elegir entre ocho capas extraídas de fotografías y el motor de
+arrugas generadas por semilla. Se activa con el interruptor del bloque.
+
+Capas fotográficas:
+  Pliegues amplios    Papel con grandes pliegues y zonas lisas.
+  Papel arrugado     Muchas arrugas pequeñas y crestas marcadas.
+  Papel desgarrado   Pliegues irregulares y marcas de rotura del papel original.
+  Papel pegado 1–5   Cinco variantes de papel encolado, con bolsas y pliegues.
+  Intensidad         Opacidad de la capa; al 0 % desaparece.
+  Contraste          Fuerza de las luces y las sombras extraídas.
+
+Estas capas conservan el dibujo del cartel: sus sombras oscurecen la tinta y
+sus luces aclaran el papel y la tinta oscura. No añaden el blanco ni el color de
+la fotografía. La iluminación general se ha retirado para aislar los pliegues.
+La textura conserva sus proporciones, se centra y se recorta para cubrir el cartel.
+En formatos horizontales gira 90°. No se repite en mosaico ni invade el anexo.
+El resultado es una capa de iluminación; no deforma los contornos de las letras.
+Para empezar, prueba Pliegues amplios con Intensidad 60–70 % y Contraste 100 %.
+Las fotos no utilizan Semilla, Bolsas de aire, Anchura ni los controles de Más;
+esos ajustes solo se muestran al elegir «Generadas por semilla».
+
+Los mapas están incluidos en assets/paper/textures.js y funcionan sin conexión,
+también abriendo el HTML directamente. Para exportar se utilizan hasta 2400 píxeles
+de ancho, frente a los 700 de la vista previa. PNG y SVG incluyen la capa incrustada.
+La elección y sus ajustes se guardan en el navegador y en el JSON habitual.
+Los borradores y JSON anteriores sin selector de capa conservan el motor por semilla.
+
+Arrugas generadas por semilla: superficies de papel mate que se levantan entre puntos de tensión y
+vuelven a quedar pegadas a la pared. Cada pliegue tiene una cara ancha y una caída
+corta, con anchura y altura variables, quiebros y ramas que confluyen en la cresta.
+Las bolsas de aire deforman las caras vecinas y algunos bordes se levantan antes
+de volver a quedar pegados. Hay zonas amplias lisas entre los pliegues;
+«Muchas» añade más pliegues y confluencias.
+Las luces y las sombras de contacto se calculan a partir del relieve, con una
+fuente desde arriba a la izquierda y sin brillo especular.
   Semilla            Cada número da un juego de arrugas distinto. "Otra" elige uno al azar.
-  Intensidad         Cuánto se nota el efecto.
+  Intensidad         Cuánto se nota el efecto; al 0 % desaparece.
+  Bolsas de aire     Volumen de las bolsas, amplitud de las caras y bordes levantados (0–100 %).
   Anchura / Relieve  Arrugas más finas o más anchas, y cuánto se levantan.
   Más                Dirección, cantidad de arrugas y arruguitas finas.
 
+Para un pegado discreto, prueba Intensidad 35–50 %, Bolsas de aire 40–65 % y
+Cantidad «Pocas». Para papel más arrugado, usa Intensidad 60–80 %, Bolsas de aire
+70–100 % y Cantidad «Normal» o «Muchas». Anchura controla el tamaño de los pliegues;
+Relieve, la fuerza de sus luces y sombras. Con Bolsas de aire al 0 % quedan los
+pliegues y desaparecen las zonas despegadas. Cambiar Intensidad o Bolsas de aire no
+cambia la posición de los pliegues.
+
 Al descargar, las arrugas se recalculan a la resolución elegida: tarda unos segundos.
+Se mantienen la geometría y la fuerza del relieve entre la vista previa y la descarga.
+Los ajustes se guardan en el navegador y en JSON. Los proyectos antiguos reciben un 65 % de bolsas de aire;
+la interpretación de sus semillas corresponde ahora al nuevo motor.
 
 
 EVENTO

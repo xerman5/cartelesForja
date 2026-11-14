@@ -28,3 +28,9 @@ En el editor tipográfico, Tusker aparece automáticamente en el selector, agrup
 Las fuentes de Google necesitan conexión. Las fuentes locales permiten trabajar sin ella. El JSON y el SVG del editor tipográfico pueden incluir las fuentes utilizadas.
 
 Consulta la [ayuda completa de Cartel a caja](docs/cartel-a-caja.txt) para los efectos, los formatos de impresión y la exportación.
+
+En **Estilo → Imagen**, sube una foto o textura y elige **Aplicar imagen a → Fondo o Letras**. En Letras, la imagen rellena el título sobre el color del papel, con el mismo zoom, encaje y opacidad. La elección se guarda en el proyecto y se incluye al exportar PNG o SVG.
+
+[Comparativa de la misma imagen aplicada al fondo o a las letras](docs/imagen-fondo-letras.jpg).
+
+En **Estilo → Arrugas y pegado**, el selector **Arrugas** ofrece ocho capas extraídas de fotografías de papel, además del motor por semilla. Las capas están incluidas para uso sin conexión y se incrustan al exportar. El [registro de la prueba](docs/arrugas-fotograficas.md) recoge las imágenes de origen, la extracción y las comprobaciones realizadas.

@@ -300,6 +300,12 @@ Traffic</textarea>
             <span id="bgLabel">Elige o arrastra una foto o textura</span>
           </label>
           <div class="field" id="bgCtrls" hidden>
+            <label for="bgTarget">Aplicar imagen a</label>
+            <select id="bgTarget" aria-describedby="bgTargetHelp">
+              <option value="background" selected>Fondo</option>
+              <option value="letters">Letras</option>
+            </select>
+            <p class="hint" id="bgTargetHelp">En las letras, la imagen rellena el título y el fondo conserva el color del papel.</p>
             <div class="row"><label for="bgOp">Opacidad</label><output id="bgOpOut"></output></div>
             <input type="range" id="bgOp" min="0" max="100" value="100">
             <div class="row"><label for="bgZoom">Zoom de la imagen</label><output id="bgZoomOut" for="bgZoom">100 %</output></div>
@@ -321,6 +327,21 @@ Traffic</textarea>
           <div class="sub-head"><h3>Pegado</h3><label class="switch"><input type="checkbox" id="wrk" checked aria-label="Activar las arrugas"></label></div>
           <div id="wrkBody" class="sub" style="border:0;padding:0">
             <div class="field">
+              <label for="wsource">Arrugas</label>
+              <select id="wsource">
+                <option value="photo-soft" selected>Pliegues amplios · foto</option>
+                <option value="photo-creased">Papel arrugado · foto</option>
+                <option value="photo-torn">Papel desgarrado · foto</option>
+                <option value="photo-glued-1">Papel pegado 1 · foto</option>
+                <option value="photo-glued-2">Papel pegado 2 · foto</option>
+                <option value="photo-glued-3">Papel pegado 3 · foto</option>
+                <option value="photo-glued-4">Papel pegado 4 · foto</option>
+                <option value="photo-glued-5">Papel pegado 5 · foto</option>
+                <option value="procedural">Generadas por semilla</option>
+              </select>
+              <p class="hint" id="wphotoHint">Luces y sombras extraídas de papel real, superpuestas al color y al texto. La foto se recorta para encajar en el cartel.</p>
+            </div>
+            <div class="field" data-wrk-procedural>
               <label for="wseed">Semilla</label>
               <div class="seedrow">
                 <input type="number" id="wseed" min="1" max="999999" step="1" value="1">
@@ -331,8 +352,13 @@ Traffic</textarea>
               <div class="row"><label for="wint">Intensidad</label><output id="wintOut"></output></div>
               <input type="range" id="wint" min="0" max="100" value="60">
             </div>
-            <div class="two">
-              <div class="field">
+            <div class="field" data-wrk-procedural>
+              <div class="row"><label for="wair">Bolsas de aire</label><output id="wairOut"></output></div>
+              <input type="range" id="wair" min="0" max="100" step="5" value="65">
+              <p class="hint">Zonas abombadas en el interior y bordes levantados del papel.</p>
+            </div>
+            <div class="two" id="wrinkleDimensions">
+              <div class="field" data-wrk-procedural>
                 <div class="row"><label for="wwid">Anchura</label><output id="wwidOut"></output></div>
                 <input type="range" id="wwid" min="50" max="250" step="5" value="100">
               </div>
@@ -341,7 +367,7 @@ Traffic</textarea>
                 <input type="range" id="wrel" min="25" max="200" step="5" value="100">
               </div>
             </div>
-            <details class="more" data-box="pegadoMas">
+            <details class="more" data-box="pegadoMas" data-wrk-procedural>
               <summary>Más</summary>
               <div>
                 <div class="two">
@@ -570,18 +596,69 @@ Traffic</textarea>
 <svg id="measure" xmlns="http://www.w3.org/2000/svg"><text id="mText" x="0" y="100" font-size="100"></text><text id="mLast" x="0" y="100" font-size="100"></text></svg>
 
 <script src="fonts/tusker/bundled.js"></script>
+<script src="assets/paper/textures.js"></script>
 <script>
+// Las fotografías aportan la iluminación observada, sin inventar una geometría 3D.
+const PaperWrinkles = (() => {
+  const sources = new Map((window.forjaPaperTextures || []).map(texture => [texture.id, texture]));
+  const textures = new Map();
+  const loading = new Map();
+  function load(id) {
+    if (textures.has(id)) return Promise.resolve();
+    if (loading.has(id)) return loading.get(id);
+    const texture = sources.get(id);
+    if (!texture) return Promise.reject(new Error('No se ha podido cargar la textura de papel. Comprueba assets/paper/textures.js.'));
+    const image = new Image();
+    image.src = texture.data;
+    const promise = image.decode().then(() => {
+      textures.set(id, image);
+      // Conserva como máximo dos imágenes decodificadas; los mapas siguen incluidos.
+      while (textures.size > 2) textures.delete(textures.keys().next().value);
+    }).finally(() => { loading.delete(id); });
+    loading.set(id, promise);
+    return promise;
+  }
+  const ready = load('photo-soft');
+  // El fallo se informa en la interfaz y al exportar, sin una promesa rechazada sin capturar.
+  ready.catch(() => {});
+  function render(id, aspect, grid, intensity, contrast) {
+    const image = textures.get(id);
+    if (!image) return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = grid;
+    canvas.height = Math.max(1, Math.round(grid * aspect));
+    const ctx = canvas.getContext('2d');
+    const landscape = aspect < 1;
+    const sourceW = landscape ? image.naturalHeight : image.naturalWidth;
+    const sourceH = landscape ? image.naturalWidth : image.naturalHeight;
+    const scale = Math.max(canvas.width / sourceW, canvas.height / sourceH);
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    if (landscape) ctx.rotate(Math.PI / 2);
+    ctx.drawImage(image, -image.naturalWidth * scale / 2, -image.naturalHeight * scale / 2,
+      image.naturalWidth * scale, image.naturalHeight * scale);
+    ctx.restore();
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = pixels.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const light = (data[i] - 128) / 512;
+      const alpha = intensity * (1 - Math.exp(-Math.abs(light) * contrast * 4));
+      data[i] = data[i + 1] = data[i + 2] = light < 0 ? 0 : 255;
+      data[i + 3] = Math.round(255 * alpha);
+    }
+    ctx.putImageData(pixels, 0, 0);
+    return canvas;
+  }
+  return { ready, load, render, has: id => textures.has(id) };
+})();
+
 // ---------------- arrugas de cartel mal pegado ----------------
 // Genera una capa RGBA (blanco para las luces, negro para las sombras) que se pone encima del cartel.
 // Todo se calcula en un espacio de 1000 unidades de ancho, así que la misma semilla da el mismo
 // resultado en la vista previa y en la exportación a 300 ppp.
 const Wrinkles=(function(){
 "use strict";
-const N=600;
-const U_REF2=1.5203;            // calibración del prototipo
 const LIGHT=(()=>{const v=[-0.6,-0.55,0.58];const n=Math.hypot(...v);return v.map(x=>x/n)})();
-const HALF=(()=>{const v=[LIGHT[0],LIGHT[1],LIGHT[2]+1];const n=Math.hypot(...v);return v.map(x=>x/n)})();
-const HZ30=Math.pow(HALF[2],30);
 
 function rngFrom(seed){
   // mezcla la semilla para que números consecutivos den resultados independientes
@@ -598,113 +675,189 @@ function rngFrom(seed){
   };
 }
 const smooth=t=>{t=t<0?0:t>1?1:t;return t*t*(3-2*t)};
-const lin=n=>Float64Array.from({length:n},(_,i)=>i/(n-1));
 
 // ---------- geometría ----------
-function geometry(p,aspect){
-  const R=rngFrom(p.seed);
-  const w=1000, h=1000*aspect, D=Math.hypot(w,h), cx=w/2, cy=h/2;
-  const wobble=(t,amp,freqs)=>{const out=new Float64Array(t.length);for(const f of freqs){const A=amp*R.uni(0.5,1),ph=R.uni(0,2*Math.PI);for(let i=0;i<t.length;i++)out[i]+=A*Math.sin(2*Math.PI*f*t[i]+ph);}return out;};
-  const kinks=(t,count,size)=>{const out=new Float64Array(t.length);for(let k=0;k<count;k++){const c=R.uni(0.15,0.85),L=R.uni(0.05,0.1),d=R.sign()*R.uni(0.4,1)*size;for(let i=0;i<t.length;i++)out[i]+=d*smooth((t[i]-c)/L+0.5);}return out;};
-  const toXY=(u,v,th)=>{const n=u.length,x=new Float64Array(n),y=new Float64Array(n),c=Math.cos(th),s=Math.sin(th);for(let i=0;i<n;i++){x[i]=cx+u[i]*c+v[i]*s;y[i]=cy-u[i]*s+v[i]*c;}return [x,y];};
-  const across=th=>Math.abs(w*Math.cos(th))+Math.abs(h*Math.sin(th));
-  const along=th=>Math.abs(w*Math.sin(th))+Math.abs(h*Math.cos(th));
-  const edge=(x,y)=>{const d=Math.max(0,Math.min(x,w-x,y,h-y));return Math.exp(-d/(0.09*Math.min(w,h)));};
-
-  let dir=p.dir;
-  if(dir==="auto"){const r=R.u();dir=r<0.55?"v":r<0.8?"h":"d";}
-  const theta0=({v:0,h:Math.PI/2,d:R.sign()*35*Math.PI/180})[dir]+R.normal(0,0.12);
-  const amounts={few:[[1,2],[2,3]],normal:[[1,3],[3,5]],many:[[2,4],[5,8]]}[p.amount]||[[1,3],[3,5]];
-  const WV=0.012;
-  const ridges=[];
-  const t=lin(N);
-
-  // 1) arrugas largas de borde a borde
-  const nFull=R.int(...amounts[0]);
-  for(let i=0;i<nFull;i++){
-    const th=theta0+R.normal(0,0.12);
-    let x,y,u,v;
-    for(let attempt=0;attempt<12;attempt++){
-      v=t.map(tt=>(tt-0.5)*D);
-      const jog=kinks(t,R.int(0,3),0.045*w);
-      const u0=R.uni(-0.35,0.35)*across(th);
-      const w1=wobble(t,0.03*w,[0.4,0.9]), w2=wobble(t,WV*w,[1.8,2.7]);
-      u=t.map((_,k)=>u0+w1[k]+w2[k]+jog[k]);
-      [x,y]=toXY(u,v,th);
-      let ok=true;
-      for(const r of ridges){ if(r.kind!=="main") continue; let m=Infinity; for(let k=0;k<N;k+=3){const dd=Math.hypot(x[k]-r.x[k],y[k]-r.y[k]); if(dd<m) m=dd;} if(m<=0.08*w){ok=false;break;} }
-      if(ok) break;
+function geometry(p, aspect) {
+  const R = rngFrom(p.seed);
+  const w = 1000, h = w * aspect;
+  const family = ['channels', 'broad', 'mixed'][R.int(0, 3)];
+  let dir = p.dir;
+  if (dir === 'auto') dir = R.u() < (family === 'broad' ? 0.35 : 0.6) ? 'v' : R.u() < 0.55 ? 'd' : 'h';
+  const angle = { h: 0, v: Math.PI / 2, d: R.sign() * R.uni(0.5, 0.95) }[dir] + R.normal(0, 0.08);
+  const dx = Math.cos(angle), dy = Math.sin(angle);
+  const across = Math.abs(dy) * w + Math.abs(dx) * h;
+  const counts = family === 'channels' ? { few: 2, normal: 3, many: 5 } : { few: 1, normal: 2, many: 3 };
+  const count = counts[p.amount] || counts.normal;
+  const roots = [], ridges = [], crinkles = [];
+  const lane = across * 0.88 / count;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function lineLimits(cx, cy) {
+    let lo = -Infinity, hi = Infinity;
+    for (const [center, direction, size] of [[cx, dx, w], [cy, dy, h]]) {
+      if (Math.abs(direction) < 0.00001) {
+        if (center < 0 || center > size) return null;
+        continue;
+      }
+      const a = -center / direction, b = (size - center) / direction;
+      lo = Math.max(lo, Math.min(a, b)); hi = Math.min(hi, Math.max(a, b));
     }
-    const f=R.uni(2,4),ph=R.uni(0,6),sc=R.uni(0.85,1.15);
-    const wid=t.map((tt,k)=>(0.8+1.5*edge(x[k],y[k]))*(1+0.28*Math.sin(2*Math.PI*f*tt+ph))*sc);
-    ridges.push({x,y,wid,pres:new Float64Array(N).fill(1),amp:1,kind:"main"});
-    if(R.u()<0.45){
-      const off=R.sign()*R.uni(0.025,0.045)*w;
-      let a=R.uni(0.1,0.9),b=R.uni(0.1,0.9); if(a>b)[a,b]=[b,a];
-      if(b-a>0.2){
-        const pres=t.map(tt=>smooth((tt-a)/0.08)*smooth((b-tt)/0.08));
-        const ww=wobble(t,0.006*w,[2.0]);
-        const [x2,y2]=toXY(u.map((uu,k)=>uu+off+ww[k]),v,th);
-        ridges.push({x:x2,y:y2,wid:wid.map(q=>q*0.55),pres,amp:0.6,kind:"twin"});
+    return hi > lo ? [lo, hi] : null;
+  }
+  function samplePath(points, attributes) {
+    const path = { x: [], y: [], wid: [], crease: [], lift: [], round: [], ...attributes };
+    for (let j = 0; j < points.length - 1; j++) {
+      const a = points[Math.max(0, j - 1)], b = points[j];
+      const c = points[j + 1], d = points[Math.min(points.length - 1, j + 2)];
+      const steps = Math.max(8, Math.ceil(Math.hypot(c.x - b.x, c.y - b.y) / 5));
+      for (let k = 0; k < steps; k++) {
+        const t = k / steps, t2 = t * t, t3 = t2 * t;
+        const cubic = key => 0.5 * (2 * b[key] + (-a[key] + c[key]) * t
+          + (2 * a[key] - 5 * b[key] + 4 * c[key] - d[key]) * t2
+          + (-a[key] + 3 * b[key] - 3 * c[key] + d[key]) * t3);
+        path.x.push(cubic('x')); path.y.push(cubic('y'));
+      }
+    }
+    path.x.push(points[points.length - 1].x); path.y.push(points[points.length - 1].y);
+    return path;
+  }
+  function measure(path) {
+    const lengths = [0];
+    for (let i = 1; i < path.x.length; i++) lengths.push(lengths[i - 1] + Math.hypot(path.x[i] - path.x[i - 1], path.y[i] - path.y[i - 1]));
+    return lengths.map(v => v / (lengths[lengths.length - 1] || 1));
+  }
+  function distanceToSegment(x, y, ax, ay, bx, by) {
+    const vx = bx - ax, vy = by - ay;
+    const t = clamp(((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy || 1), 0, 1);
+    return Math.hypot(x - ax - vx * t, y - ay - vy * t);
+  }
+  // Las ramas se aceptan dentro de una región libre: no hay cruces de cauces independientes.
+  function clearBranch(path, parent, join) {
+    for (let i = 6; i < path.x.length; i += 4) {
+      const x = path.x[i], y = path.y[i];
+      if (x < 0 || x > w || y < 0 || y > h) continue;
+      const fromJoin = Math.hypot(x - parent.x[join], y - parent.y[join]);
+      for (const other of ridges) {
+        if (other === parent && fromJoin < 95) continue;
+        for (let k = 0; k < other.x.length - 4; k += 4) {
+          if (other === parent && Math.abs(k - join) < 18) continue;
+          const distance = distanceToSegment(x, y, other.x[k], other.y[k], other.x[k + 4], other.y[k + 4]);
+          const clearance = other.root === parent.root ? 13 : 34;
+          if (distance < clearance) return false;
+        }
+      }
+    }
+    return true;
+  }
+  for (let i = 0; i < count; i++) {
+    const broad = family === 'broad' || (family === 'mixed' && R.u() < 0.55);
+    const offset = ((i + R.uni(0.3, 0.7)) / count - 0.5) * across * 0.88;
+    const cx = w / 2 - dy * offset, cy = h / 2 + dx * offset;
+    const limits = lineLimits(cx, cy);
+    if (!limits) continue;
+    const sign = R.sign(), entry = sign > 0 ? limits[0] : limits[1];
+    const available = limits[1] - limits[0];
+    const edgeRoot = broad || i === 0 || R.u() < 0.55;
+    const openEnd = broad ? R.u() < 0.8 : i === 0 && R.u() < 0.55;
+    const start = edgeRoot ? -32 : available * R.uni(0.12, 0.26);
+    const end = openEnd ? available + 32 : available * R.uni(0.65, 0.94);
+    const points = [], knots = R.int(5, 8);
+    const drift = R.uni(-0.12, 0.12) * lane;
+    const phase = R.uni(0, Math.PI * 2), turnAt = R.uni(0.3, 0.7), turn = R.uni(-0.24, 0.24) * lane;
+    for (let k = 0; k <= knots; k++) {
+      const t = k / knots, along = entry + sign * (start + (end - start) * t);
+      const bend = drift * Math.sin(t * Math.PI * 1.4 + phase)
+        + turn * smooth((t - turnAt) / 0.15) + R.normal(0, lane * 0.025);
+      points.push({ x: cx + dx * along - dy * bend, y: cy + dy * along + dx * bend });
+    }
+    const side = R.sign();
+    const main = samplePath(points, { id: ridges.length, root: roots.length, parent: null, side,
+      broad, edgeRoot, openEnd, slack: R.uni(0.65, 1.05), rootWidth: broad ? R.uni(75, 125) : R.uni(38, 70) });
+    const progress = measure(main), phase2 = R.uni(0, 6.28);
+    const neckAt = R.uni(0.35, 0.65), neckSpan = R.uni(0.045, 0.09);
+    const baseWidth = broad ? R.uni(45, 80) : R.uni(15, 28);
+    for (let k = 0; k < progress.length; k++) {
+      const t = progress[k];
+      const startGate = edgeRoot ? 1 : smooth(t / 0.12);
+      const endGate = openEnd ? 1 : smooth((1 - t) / 0.22);
+      const rootLobe = Math.max(Math.exp(-Math.pow((t - (edgeRoot ? 0.015 : 0.17)) / (broad ? 0.27 : 0.17), 2)),
+        openEnd ? 0.65 * Math.exp(-Math.pow((t - 1) / 0.2, 2)) : 0);
+      const neck = 1 - 0.55 * Math.exp(-Math.pow((t - neckAt) / neckSpan, 2));
+      const tension = 0.85 + 0.15 * Math.sin(t * 10 + phase2);
+      const width = (baseWidth * tension * neck + main.rootWidth * rootLobe) * startGate * endGate;
+      main.wid.push(width);
+      main.crease.push(baseWidth * tension * neck * startGate * endGate);
+      main.lift.push(startGate * endGate);
+      main.round.push(rootLobe * 0.8 + (broad ? 0.15 : 0));
+    }
+    roots.push({ path: main.id, kind: edgeRoot ? 'edge' : 'interior', broad });
+    ridges.push(main);
+    // Una rama hereda posición, tangente, anchura y holgura de su cauce padre.
+    const branches = broad ? (p.amount === 'few' ? 1 : 2) : p.amount === 'many' ? 2 : 1;
+    for (let j = 0; j < branches; j++) {
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const k = Math.floor(main.x.length * R.uni(0.3, 0.7));
+        if (main.x[k] < 40 || main.x[k] > w - 40 || main.y[k] < 40 || main.y[k] > h - 40 || main.lift[k] < 0.6) continue;
+        const heading = Math.atan2(main.y[k + 1] - main.y[k - 1], main.x[k + 1] - main.x[k - 1]);
+        const toEdge = broad && R.u() < 0.75;
+        const branchSide = R.sign();
+        const turn = branchSide * R.uni(toEdge ? 0.75 : 0.35, toEdge ? 1.35 : 0.7);
+        let reach = Math.min(R.uni(180, 370), available * 0.4);
+        if (toEdge) {
+          const ex = Math.cos(heading + turn), ey = Math.sin(heading + turn);
+          const distances = [];
+          if (ex > 0.001) distances.push((w - main.x[k]) / ex);
+          if (ex < -0.001) distances.push(-main.x[k] / ex);
+          if (ey > 0.001) distances.push((h - main.y[k]) / ey);
+          if (ey < -0.001) distances.push(-main.y[k] / ey);
+          reach = Math.min(...distances) + 60;
+        }
+        const points = [];
+        for (let n = 0; n <= 6; n++) {
+          const t = n / 6, theta = heading + turn * smooth(t / 0.55);
+          points.push({ x: main.x[k] + Math.cos(theta) * reach * t,
+            y: main.y[k] + Math.sin(theta) * reach * t });
+        }
+        const branch = samplePath(points, { id: ridges.length, root: main.root, parent: main.id,
+          join: k, side, broad: toEdge, edgeRoot: false, openEnd: toEdge, slack: main.slack, rootWidth: 0 });
+        if (!clearBranch(branch, main, k)) continue;
+        for (const t of measure(branch)) {
+          const gate = toEdge ? 1 : smooth((1 - t) / 0.55);
+          const volume = (1 - 0.45 * smooth(t / 0.3)) + (toEdge ? 0.85 * smooth((t - 0.4) / 0.6) : 0);
+          branch.wid.push(main.wid[k] * volume * gate);
+          branch.crease.push(main.crease[k] * (1 - 0.4 * smooth(t / 0.3)) * gate);
+          branch.lift.push(main.lift[k] * gate);
+          branch.round.push(main.round[k] * (1 - t));
+        }
+        ridges.push(branch);
+        break;
       }
     }
   }
-  // 2) arrugas menores: parciales (desde un borde) o interiores
-  const nMinor=R.int(...amounts[1]);
-  for(let i=0;i<nMinor;i++){
-    const th=theta0+R.normal(0,0.3);
-    const Lf=along(th);
-    const jog=kinks(t,R.int(0,2),0.03*w);
-    const u0=R.uni(-0.42,0.42)*across(th);
-    let x,y,wid,pres;
-    if(R.u()<0.5){
-      const sgn=R.sign();
-      const vEnd=sgn*R.uni(-0.25,0.2)*Lf;
-      const v=t.map(tt=>sgn*D/2+(vEnd-sgn*D/2)*tt);
-      const w1=wobble(t,0.02*w,[0.6,1.3]), w2=wobble(t,WV*0.6*w,[2.0]);
-      [x,y]=toXY(t.map((_,k)=>u0+w1[k]+w2[k]+jog[k]),v,th);
-      const sc=R.uni(0.6,0.95);
-      wid=t.map((tt,k)=>(0.7+1.3*edge(x[k],y[k]))*Math.pow(Math.max(0,1-tt),0.45)*sc);
-      pres=t.map(tt=>smooth((1-tt)/0.25));
-    }else{
-      const L=R.uni(0.2,0.5)*Lf, vc=R.uni(-0.3,0.3)*Lf;
-      const v=t.map(tt=>vc+(tt-0.5)*L);
-      const w1=wobble(t,0.015*w,[0.7,1.5]), w2=wobble(t,WV*0.5*w,[1.6]);
-      [x,y]=toXY(t.map((_,k)=>u0+w1[k]+w2[k]+jog[k]),v,th);
-      const sc=R.uni(0.5,0.85);
-      wid=t.map(tt=>Math.pow(Math.sin(Math.PI*tt),0.8)*sc);
-      pres=t.map(tt=>smooth(tt/0.15)*smooth((1-tt)/0.15));
+  const fineCount = Math.round(({ few: 4, normal: 8, many: 16 }[p.amount] || 8) * p.crinkles);
+  for (let i = 0; i < fineCount && ridges.length; i++) {
+    const parent = ridges[R.int(0, ridges.length)];
+    const k = R.int(Math.floor(parent.x.length * 0.2), Math.floor(parent.x.length * 0.75));
+    if (parent.x[k] < 20 || parent.x[k] > w - 20 || parent.y[k] < 20 || parent.y[k] > h - 20 || parent.lift[k] < 0.5) continue;
+    const angle = Math.atan2(parent.y[k + 1] - parent.y[k - 1], parent.x[k + 1] - parent.x[k - 1]);
+    const reach = R.uni(30, 90), turn = R.sign() * R.uni(0.4, 0.7);
+    const points = [0, 0.2, 0.6, 1].map(t => ({ x: parent.x[k] + Math.cos(angle + turn * t) * reach * t,
+      y: parent.y[k] + Math.sin(angle + turn * t) * reach * t }));
+    const path = samplePath(points, { id: ridges.length + i, root: parent.root, parent: parent.id,
+      side: parent.side, broad: false, edgeRoot: false, openEnd: false, slack: parent.slack * 0.35, rootWidth: 0 });
+    if (!clearBranch(path, parent, k)) continue;
+    for (const t of measure(path)) {
+      path.wid.push(Math.min(parent.wid[k], 9) * Math.pow(1 - t, 1.2));
+      path.crease.push(path.wid[path.wid.length - 1]);
+      path.lift.push(Math.pow(1 - t, 1.5) * parent.lift[k]);
+      path.round.push(0);
     }
-    const f=R.uni(1.5,3),ph=R.uni(0,6);
-    wid=wid.map((q,k)=>q*(1+0.3*Math.sin(2*Math.PI*f*t[k]+ph)));
-    ridges.push({x,y,wid,pres,amp:0.85,kind:"minor"});
+    crinkles.push(path);
   }
-  // pliegue fino al pie de cada arruga, en el lado contrario a la luz, a tramos
-  for(const r of ridges){
-    const cyc=R.uni(4,9), ph=R.uni(0,6);
-    r.gate=t.map(tt=>smooth((Math.sin(tt*cyc*Math.PI+ph)+0.2)/0.6));
-  }
-  // 3) arruguitas finas que salen de las arrugas
-  const crinkles=[];
-  const mains=ridges.filter(r=>r.kind!=="twin");
-  const nCr=Math.round(R.int(8,15)*p.crinkles);
-  for(let i=0;i<nCr;i++){
-    const r=mains[R.int(0,mains.length)];
-    const k=R.int(10,N-10);
-    const turn=R.sign()*R.uni(0.25,0.6), flip=R.u()<0.5?Math.PI:0;
-    const L=R.uni(30,130), bend=R.normal(0,0.35);
-    if(r.pres[k]<0.5) continue;
-    const ang=Math.atan2(r.y[k+1]-r.y[k-1],r.x[k+1]-r.x[k-1])+turn+flip;
-    const M=60, x=new Float64Array(M), y=new Float64Array(M), pr=new Float64Array(M);
-    let px=r.x[k],py=r.y[k];
-    for(let j=0;j<M;j++){const tt=j/(M-1),a=ang+bend*tt;px+=Math.cos(a)*L/M;py+=Math.sin(a)*L/M;x[j]=px;y[j]=py;pr[j]=Math.pow(1-tt,0.8);}
-    crinkles.push({x,y,p:pr});
-  }
-  // ondulación suave de todo el pliego
-  const cell=16.2, lw=Math.ceil(w/cell)+1, lh=Math.ceil(h/cell)+1;
-  const low=new Float32Array(lw*lh); for(let i=0;i<low.length;i++) low[i]=R.normal(0,1);
-  blur(low,lw,lh,3);
-  return {ridges,crinkles,low:{data:low,lw,lh,cell},aspect,dir};
+  const cell = 12, lw = Math.ceil(w / cell) + 1, lh = Math.ceil(h / cell) + 1;
+  const low = new Float32Array(lw * lh);
+  for (let i = 0; i < low.length; i++) low[i] = R.normal(0, 1);
+  blur(low, lw, lh, 1.4);
+  return { ridges, crinkles, roots, family, low: { data: low, lw, lh, cell }, aspect, dir };
 }
 
 // ---------- desenfoque gaussiano (tres pasadas de caja) ----------
@@ -736,8 +889,27 @@ function boxV(src,dst,w,h,r){
   }
 }
 function blur(a,w,h,sigma){
-  if(sigma<0.4) return a;
+  if(sigma<0.15) return a;
   const tmp=new Float32Array(a.length);
+  if (sigma < 1.5) {
+    const radius = Math.ceil(sigma * 3), kernel = [];
+    let total = 0;
+    for (let k = -radius; k <= radius; k++) {
+      const weight = Math.exp(-k * k / (2 * sigma * sigma));
+      kernel.push(weight); total += weight;
+    }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let value = 0;
+      for (let k = -radius; k <= radius; k++) value += a[y * w + Math.max(0, Math.min(w - 1, x + k))] * kernel[k + radius];
+      tmp[y * w + x] = value / total;
+    }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let value = 0;
+      for (let k = -radius; k <= radius; k++) value += tmp[Math.max(0, Math.min(h - 1, y + k)) * w + x] * kernel[k + radius];
+      a[y * w + x] = value / total;
+    }
+    return a;
+  }
   for(const s of boxSizes(sigma,3)){ const r=(s-1)>>1; if(r<1) continue; boxH(a,tmp,w,h,r); boxV(tmp,a,w,h,r); }
   return a;
 }
@@ -747,86 +919,169 @@ function makeCtx(gw,gh){
   const c=document.createElement("canvas"); c.width=gw; c.height=gh;
   const ctx=c.getContext("2d",{willReadFrequently:true}); ctx.lineCap="round"; return ctx;
 }
-function drawPath(ctx,xs,ys,wid,pres,w0,s,offX,offY){
-  for(let k=0;k<xs.length-1;k++){
-    const a=pres[k], r=w0*s*(wid?wid[k]:1);
-    if(a<0.02||r<0.25) continue;
-    const g=Math.round(a*255);
-    ctx.strokeStyle="rgb("+g+","+g+","+g+")"; ctx.lineWidth=2*r;
-    const x0=(xs[k]+(offX?offX[k]:0))*s, y0=(ys[k]+(offY?offY[k]:0))*s;
-    const x1=(xs[k+1]+(offX?offX[k+1]:0))*s, y1=(ys[k+1]+(offY?offY[k+1]:0))*s;
-    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1===x0&&y1===y0?x1+0.01:x1,y1); ctx.stroke();
-  }
-}
-function accumulate(ctx,acc,weight){
-  const {width:gw,height:gh}=ctx.canvas;
-  const d=ctx.getImageData(0,0,gw,gh).data;
-  const f=weight/255;
-  for(let i=0,j=0;i<acc.length;i++,j+=4) acc[i]+=d[j]*f;
-}
-function clear(ctx){ctx.globalCompositeOperation="source-over";ctx.fillStyle="#000";ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);}
-
-function render(geo,p,gw){
-  const gh=Math.max(1,Math.round(gw*geo.aspect));
-  const s=gw/1000, WS=p.width;
-  const ctx=makeCtx(gw,gh);
-  const Hm=new Float32Array(gw*gh);
-  const layer=(fn,sigma,weight)=>{
-    const acc=new Float32Array(gw*gh);
-    fn(acc);
-    blur(acc,gw,gh,sigma*s);
-    for(let i=0;i<Hm.length;i++) Hm[i]+=weight*acc[i];
-  };
-  const ridgeLayer=(w0,extra)=>acc=>{ for(const r of geo.ridges){ clear(ctx); drawPath(ctx,r.x,r.y,r.wid,extra?extra(r).pres:r.pres,w0,s,extra?extra(r).ox:null,extra?extra(r).oy:null); accumulate(ctx,acc,r.amp); } };
-  // pliegue: desplazado hacia el lado en sombra
-  const creaseOf=r=>{
-    const n=r.x.length, ox=new Float64Array(n), oy=new Float64Array(n);
-    let mx=0,my=0; const px=new Float64Array(n), py=new Float64Array(n);
-    for(let k=0;k<n;k++){const a=Math.max(0,k-1),b=Math.min(n-1,k+1);const dx=r.x[b]-r.x[a],dy=r.y[b]-r.y[a],nn=Math.hypot(dx,dy)+1e-6;px[k]=-dy/nn;py[k]=dx/nn;mx+=px[k];my+=py[k];}
-    const sg=(mx*LIGHT[0]+my*LIGHT[1]>0)?-1:1;
-    for(let k=0;k<n;k++){const off=r.wid[k]*7.5;ox[k]=sg*px[k]*off;oy[k]=sg*py[k]*off;}
-    return {pres:r.pres.map((q,k)=>q*r.gate[k]),ox,oy};
-  };
-  layer(ridgeLayer(3.0*WS),2.5,0.25);
-  layer(ridgeLayer(7*WS),8*WS,1.6*WS);
-  layer(ridgeLayer(28*WS),45*WS,3.2*WS);
-  layer(acc=>{ for(const r of geo.ridges){ const c=creaseOf(r); clear(ctx); drawPath(ctx,r.x,r.y,null,c.pres,1.4,s,c.ox,c.oy); accumulate(ctx,acc,r.amp); } },2.4,-0.12);
-  layer(acc=>{ clear(ctx); for(const c of geo.crinkles) drawPath(ctx,c.x,c.y,null,c.p,2,s); accumulate(ctx,acc,1); },2,0.3);
-  layer(acc=>{ clear(ctx); for(const c of geo.crinkles) drawPath(ctx,c.x,c.y,null,c.p,6,s); accumulate(ctx,acc,1); },7,0.8);
-  // ondulación suave
-  const L=geo.low;
-  for(let y=0;y<gh;y++){
-    const fy=Math.min(L.lh-1.001,(y/s)/L.cell), y0=Math.floor(fy), ty=fy-y0;
-    for(let x=0;x<gw;x++){
-      const fx=Math.min(L.lw-1.001,(x/s)/L.cell), x0=Math.floor(fx), tx=fx-x0;
-      const i=y0*L.lw+x0;
-      const v=(L.data[i]*(1-tx)+L.data[i+1]*tx)*(1-ty)+(L.data[i+L.lw]*(1-tx)+L.data[i+L.lw+1]*tx)*ty;
-      Hm[y*gw+x]+=0.6*v;
+// Campo de alturas en unidades del papel, independiente de la resolución.
+function render(geo, p, gw) {
+  const gh = Math.max(2, Math.round(gw * geo.aspect));
+  const s = gw / 1000;
+  const ctx = makeCtx(gw, gh);
+  if (p.intensity <= 0) return ctx.canvas;
+  const heights = new Float32Array(gw * gh);
+  const bounds = (x0, y0, x1, y1) => [
+    Math.max(0, Math.floor(x0 * s)), Math.max(0, Math.floor(y0 * s)),
+    Math.min(gw - 1, Math.ceil(x1 * s)), Math.min(gh - 1, Math.ceil(y1 * s))
+  ];
+  // Cada cauce incluye su bolsa de origen. No se añaden domos ni labios independientes.
+  const nearest = new Float32Array(gw * gh);
+  const ridge = new Float32Array(gw * gh);
+  const exits = [[], [], [], []];
+  const paperH = 1000 * geo.aspect;
+  function addRidge(path) {
+    nearest.fill(Infinity);
+    ridge.fill(0);
+    const normals = path.x.map((_, k) => {
+      const before = Math.max(0, k - 1), after = Math.min(path.x.length - 1, k + 1);
+      const dx = path.x[after] - path.x[before], dy = path.y[after] - path.y[before];
+      const length = Math.hypot(dx, dy) || 1;
+      return { x: -dy / length, y: dx / length };
+    });
+    const step = 3;
+    const openWidths = path.wid.map((v, k) => (path.crease[k] + (v - path.crease[k]) * p.air) * p.width);
+    // La salida tiene una boca más estrecha; el volumen queda contenido por el adhesivo.
+    const widths = openWidths.map((v, k) => {
+      const distance = Math.max(0, Math.min(path.x[k], 1000 - path.x[k], path.y[k], paperH - path.y[k]));
+      return v * (0.72 + 0.28 * smooth(distance / (100 * p.width)));
+    });
+    for (let k = 0; k < path.x.length - 1; k++) {
+      const ax = path.x[k], ay = path.y[k], bx = path.x[k + 1], by = path.y[k + 1];
+      for (let edge = 0; edge < 4; edge++) {
+        const horizontal = edge % 2 === 0;
+        const boundary = edge === 1 ? 1000 : edge === 2 ? paperH : 0;
+        const a = horizontal ? ay : ax, b = horizontal ? by : bx;
+        if (a === b || (a < boundary) === (b < boundary)) continue;
+        const t = (boundary - a) / (b - a);
+        const along = horizontal ? ax + (bx - ax) * t : ay + (by - ay) * t;
+        if (along < 0 || along > (horizontal ? 1000 : paperH)) continue;
+        const width = (openWidths[k] + (openWidths[k + 1] - openWidths[k]) * t) * 1.3;
+        if (!exits[edge].some(exit => Math.abs(exit.along - along) < 2)) exits[edge].push({ along, width });
+      }
+    }
+    const radius = Math.max(...widths) * 1.3;
+    for (let k = 0; k < path.x.length - 1; k += step) {
+      const end = Math.min(path.x.length - 1, k + step);
+      const ax = path.x[k], ay = path.y[k], bx = path.x[end], by = path.y[end];
+      const dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy;
+      if (len2 < 0.00001) continue;
+      const [x0, y0, x1, y1] = bounds(Math.min(ax, bx) - radius, Math.min(ay, by) - radius,
+        Math.max(ax, bx) + radius, Math.max(ay, by) + radius);
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const px = x / s - ax, py = y / s - ay;
+        const t = Math.max(0, Math.min(1, (px * dx + py * dy) / len2));
+        const qx = px - t * dx, qy = py - t * dy;
+        const distance2 = qx * qx + qy * qy, i = y * gw + x;
+        if (distance2 >= nearest[i]) continue;
+        nearest[i] = distance2;
+        const width = widths[k] + (widths[end] - widths[k]) * t;
+        const round = (path.round[k] + (path.round[end] - path.round[k]) * t) * p.air;
+        const nx = normals[k].x + (normals[end].x - normals[k].x) * t;
+        const ny = normals[k].y + (normals[end].y - normals[k].y) * t;
+        const side = (qx * nx + qy * ny) * path.side;
+        const side2 = side * side / Math.max(0.00001, nx * nx + ny * ny);
+        const shortFace = width * (0.32 + 0.4 * round);
+        const face = side < 0 ? shortFace : width * 1.3;
+        const cap = (shortFace + width) * 0.5;
+        const tangent2 = Math.max(0, distance2 - side2);
+        const q2 = side2 / Math.max(0.01, face * face) + tangent2 / Math.max(0.01, cap * cap);
+        if (q2 >= 1) { ridge[i] = 0; continue; }
+        const q = Math.sqrt(q2);
+        // Contacto plano en los dos márgenes; la bolsa redondea la misma sección del cauce.
+        const sharp = (1 - q) * (1 - q) * (1 + 2 * q);
+        const rounded = 0.5 + 0.5 * Math.cos(Math.PI * q);
+        const profile = sharp + (rounded - sharp) * round * 0.45;
+        const lift = path.lift[k] + (path.lift[end] - path.lift[k]) * t;
+        // La anchura y la altura comparten la holgura: H² es proporcional a W.
+        const height = Math.sqrt(Math.max(0, width)) * path.slack * (1.1 + 0.9 * p.air) * lift;
+        ridge[i] = height * profile;
+      }
+    }
+    for (let i = 0; i < heights.length; i++) {
+      const a = heights[i], b = ridge[i];
+      const hi = Math.max(a, b), lo = Math.min(a, b);
+      // Unión C1 de las ramas: no se duplica la altura ni se dibuja una costura en la horquilla.
+      heights[i] = hi > 0 ? hi * (1 + 0.1 * Math.pow(lo / hi, 5.5)) : 0;
     }
   }
-  // luz
-  const kk=18*p.relief*s/U_REF2, S=p.intensity;
-  const img=ctx.createImageData(gw,gh), o=img.data;
-  for(let y=0;y<gh;y++){
-    for(let x=0;x<gw;x++){
-      const i=y*gw+x;
-      const gx=x===0?Hm[i+1]-Hm[i]:x===gw-1?Hm[i]-Hm[i-1]:(Hm[i+1]-Hm[i-1])/2;
-      const gy=y===0?Hm[i+gw]-Hm[i]:y===gh-1?Hm[i]-Hm[i-gw]:(Hm[i+gw]-Hm[i-gw])/2;
-      const nx=-gx*kk, ny=-gy*kk, nl=Math.sqrt(nx*nx+ny*ny+1);
-      const diff=(nx*LIGHT[0]+ny*LIGHT[1]+LIGHT[2])/nl-LIGHT[2];
-      const hd=Math.max(0,(nx*HALF[0]+ny*HALF[1]+HALF[2])/nl);
-      const spec=Math.min(1,Math.max(0,Math.pow(hd,30)-HZ30))*0.8*S;
-      const sv=diff*S, j=i*4;
-      if(sv<0){
-        const dark=0.45*Math.tanh(-sv*1.8);
-        o[j]=o[j+1]=o[j+2]=0; o[j+3]=Math.round(dark*255);
-      }else{
-        const lift=0.75*Math.tanh(sv*2), a=1-(1-lift)*(1-Math.min(1,spec));
-        o[j]=o[j+1]=o[j+2]=255; o[j+3]=Math.round(a*255);
+  geo.ridges.forEach(addRidge);
+  geo.crinkles.forEach(addRidge);
+  // Lenguas de adhesivo entre bocas vecinas: impiden una bolsa abierta de borde a borde.
+  // Se deducen de las salidas reales, no de manchas de altura independientes.
+  for (let edge = 0; edge < exits.length; edge++) {
+    const mouths = exits[edge].sort((a, b) => a.along - b.along);
+    for (let k = 1; k < mouths.length; k++) {
+      const a = mouths[k - 1], b = mouths[k], gap = b.along - a.along;
+      const span = a.width + b.width;
+      if (gap < 5 || span < gap * 0.8) continue;
+      const center = (a.along + b.along) / 2;
+      const halfWidth = Math.min(gap * 0.28, 70 * p.width);
+      const depth = Math.min(90 * p.width, gap * 0.8);
+      const skew = (a.width - b.width) * 0.12;
+      const horizontal = edge % 2 === 0;
+      const [x0, y0, x1, y1] = horizontal
+        ? bounds(center - halfWidth - Math.abs(skew), edge === 0 ? 0 : paperH - depth,
+          center + halfWidth + Math.abs(skew), edge === 0 ? depth : paperH)
+        : bounds(edge === 3 ? 0 : 1000 - depth, center - halfWidth - Math.abs(skew),
+          edge === 3 ? depth : 1000, center + halfWidth + Math.abs(skew));
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const inward = edge === 0 ? y / s : edge === 1 ? 1000 - x / s : edge === 2 ? paperH - y / s : x / s;
+        const t = inward / depth;
+        if (t < 0 || t >= 1) continue;
+        const reach = halfWidth * (1 - 0.75 * smooth(t)) * smooth((1 - t) / 0.22);
+        const along = (horizontal ? x : y) / s - center - skew * t;
+        const u = Math.abs(along) / Math.max(0.01, reach);
+        if (u < 1) heights[y * gw + x] *= smooth((u - 0.35) / 0.65);
       }
     }
   }
-  ctx.putImageData(img,0,0);
+  const low = geo.low;
+  for (let y = 0; y < gh; y++) {
+    const fy = Math.min(low.lh - 1.001, y / s / low.cell), y0 = Math.floor(fy), ty = smooth(fy - y0);
+    for (let x = 0; x < gw; x++) {
+      const fx = Math.min(low.lw - 1.001, x / s / low.cell), x0 = Math.floor(fx), tx = smooth(fx - x0);
+      const i = y0 * low.lw + x0;
+      const value = (low.data[i] * (1 - tx) + low.data[i + 1] * tx) * (1 - ty)
+        + (low.data[i + low.lw] * (1 - tx) + low.data[i + low.lw + 1] * tx) * ty;
+      const j = y * gw + x;
+      heights[j] += 0.05 * p.crinkles * value;
+    }
+  }
+  blur(heights, gw, gh, 1.1 * s);
+  const img = ctx.createImageData(gw, gh), pixels = img.data;
+  // Un píxel abarca 1/s unidades del papel: la pendiente física multiplica por s.
+  const relief = p.relief * s;
+  const horizontalLight = Math.hypot(LIGHT[0], LIGHT[1]);
+  const shadowSamples = [3, 7, 15, 30].map(distance => ({
+    dx: Math.round(LIGHT[0] / horizontalLight * distance * s),
+    dy: Math.round(LIGHT[1] / horizontalLight * distance * s), distance
+  }));
+  for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) {
+    const i = y * gw + x;
+    const gx = (heights[y * gw + Math.min(gw - 1, x + 1)] - heights[y * gw + Math.max(0, x - 1)]) / (x === 0 || x === gw - 1 ? 1 : 2);
+    const gy = (heights[Math.min(gh - 1, y + 1) * gw + x] - heights[Math.max(0, y - 1) * gw + x]) / (y === 0 || y === gh - 1 ? 1 : 2);
+    const nx = -gx * relief, ny = -gy * relief;
+    const diffuse = (nx * LIGHT[0] + ny * LIGHT[1] + LIGHT[2]) / Math.sqrt(nx * nx + ny * ny + 1);
+    let occlusion = 0;
+    for (const sample of shadowSamples) {
+      const sx = x + sample.dx, sy = y + sample.dy;
+      if (sx < 0 || sx >= gw || sy < 0 || sy >= gh) continue;
+      const obstruction = (heights[sy * gw + sx] - heights[i]) * p.relief - sample.distance * 0.65;
+      occlusion += smooth(obstruction / 4) * 0.25;
+    }
+    const light = (diffuse - LIGHT[2] - occlusion * 0.24) * p.intensity;
+    const j = i * 4, color = light < 0 ? 0 : 255;
+    pixels[j] = pixels[j + 1] = pixels[j + 2] = color;
+    // Luz difusa mate, visible tanto en la tinta oscura como en el papel claro.
+    pixels[j + 3] = Math.round(255 * (light < 0 ? 0.46 : 0.65) * Math.tanh(Math.abs(light) * (light < 0 ? 2.2 : 3.5)));
+  }
+  ctx.putImageData(img, 0, 0);
   return ctx.canvas;
 }
 
@@ -1027,7 +1282,7 @@ $('resetLineHeights').addEventListener('click', () => {
 });
 $("font").addEventListener("change",()=>{syncWeightRange(false);loadAndRun()});
 $("wnew").addEventListener("click",()=>{ $("wseed").value=1+Math.floor(Math.random()*99999); schedule(); });
-["evFooterPlacement","lineFit","evFooterSizing","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain","wrk","wseed","wint","wwid","wrel","wdir","wamt","wcrk",
+["evFooterPlacement","lineFit","evFooterSizing","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain","wrk","wsource","wseed","wint","wair","wwid","wrel","wdir","wamt","wcrk",
  "res","resCustom","stOn","evOn","evDate","evHour","evPlace","evFree","evTL","evTR","evBL","evBR","evStripPos","evSL","evSC","evSR",
  "evLabelContent","evLabelSize","evLabelRot","evLabelAuto","evLabelBg","evLabelFg","evSize","evCut"].forEach(id=>{
   $(id).addEventListener("input",schedule);$(id).addEventListener("change",schedule);
@@ -1185,7 +1440,7 @@ const Store=(function(){
 
 const SETTINGS_KEY="cartel-a-caja:ajustes";
 const SAVED_IDS=["evFooterPlacement","lineFit","evFooterSizing","lineHeights","evFooterFont","evPlayers","evDuration","evLevel","evDescription","evFooterHeight","evFooterStyle","txt","upper","wght","comp","track","deform","optical","fmt","size","margin","gap","bgc","fgc","grain",
-  "wrk","wseed","wint","wwid","wrel","wdir","wamt","wcrk","bgOp","bgFit","bgZoom","fgOp","stOn","sti","stc","stg","res","resCustom",
+  "wrk","wsource","wseed","wint","wair","wwid","wrel","wdir","wamt","wcrk","bgTarget","bgOp","bgFit","bgZoom","fgOp","stOn","sti","stc","stg","res","resCustom",
   "evOn","evDate","evHour","evPlace","evFree","evPreset","evTL","evTR","evBL","evBR","evStripPos","evSL","evSC","evSR",
   "evLabelContent","evLabelSize","evLabelRot","evLabelX","evLabelY","evLabelAuto","evLabelBg","evLabelFg","evSize","evCut"];
 let restoring=true;
@@ -1247,7 +1502,7 @@ $('bgZoomReset').addEventListener('click', () => {
 });
 $("bgRemove").addEventListener("click",()=>setBackground(null,"",true));
 $("forgetFonts").addEventListener("click",async()=>{ await Store.del("fonts"); try{ localStorage.removeItem(SETTINGS_KEY+":font"); }catch(e){} location.reload(); });
-["bgZoom","bgOp","bgFit","fgOp","sti","stc","stg"].forEach(id=>{ $(id).addEventListener("input",schedule); $(id).addEventListener("change",schedule); });
+["bgTarget","bgZoom","bgOp","bgFit","fgOp","sti","stc","stg"].forEach(id=>{ $(id).addEventListener("input",schedule); $(id).addEventListener("change",schedule); });
 
 // ---------------- medición ----------------
 function weightAt(w,f,base,comp){
@@ -1470,14 +1725,31 @@ function fmtSize(v,unit){return unit==="mm"?(v/0.3527778).toFixed(1).replace("."
 // ---------------- dibujo ----------------
 function el(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
 // ---------------- arrugas: parámetros y caché ----------------
-const PREVIEW_GRID=700, EXPORT_GRID_MAX=2000;
+const PREVIEW_GRID=700, EXPORT_GRID_MAX=2000, PHOTO_GRID_MAX=2400;
 const wrkCache=new Map();
 function wrkParams(){
   return {seed:Math.max(1,Math.floor(+$("wseed").value||1)), intensity:+$("wint").value/100, width:+$("wwid").value/100,
-    relief:+$("wrel").value/100, dir:$("wdir").value, amount:$("wamt").value, crinkles:+$("wcrk").value/100};
+    relief:+$("wrel").value/100, air:+$('wair').value/100, dir:$("wdir").value, amount:$("wamt").value, crinkles:+$("wcrk").value/100};
 }
 function wrkOverlay(aspect,grid){
   const p=wrkParams();
+  if ($('wsource').value !== 'procedural') {
+    const id = $('wsource').value;
+    const photoKey = JSON.stringify([id, aspect, grid, p.intensity, p.relief]);
+    if (wrkCache.has(photoKey)) return wrkCache.get(photoKey);
+    const canvas = PaperWrinkles.render(id, aspect, grid, p.intensity, p.relief);
+    if (!canvas) {
+      PaperWrinkles.load(id).then(() => schedule()).catch(error => toast(error.message));
+      return null;
+    }
+    const url = canvas.toDataURL('image/png');
+    // Las exportaciones grandes no se retienen entre cambios de controles.
+    if (grid === PREVIEW_GRID) {
+      if (wrkCache.size > 20) wrkCache.clear();
+      wrkCache.set(photoKey, url);
+    }
+    return url;
+  }
   const key=JSON.stringify(p)+"|"+aspect.toFixed(5)+"|"+grid;
   if(wrkCache.has(key)) return wrkCache.get(key);
   const geoKey=JSON.stringify({seed:p.seed,dir:p.dir,amount:p.amount,crinkles:p.crinkles})+"|"+aspect.toFixed(5);
@@ -1489,7 +1761,13 @@ function wrkOverlay(aspect,grid){
   return url;
 }
 function syncWrkOutputs(){
+  const photo = $('wsource').value !== 'procedural';
+  document.querySelectorAll('[data-wrk-procedural]').forEach(node => { node.hidden = photo; });
+  $('wphotoHint').hidden = !photo;
+  $('wrinkleDimensions').classList.toggle('two', !photo);
+  document.querySelector('label[for="wrel"]').textContent = photo ? 'Contraste' : 'Relieve';
   $("wintOut").textContent=$("wint").value+" %"; $("wwidOut").textContent=$("wwid").value+" %";
+  $('wairOut').textContent = $('wair').value + ' %';
   $("wrelOut").textContent=$("wrel").value+" %"; $("wcrkOut").textContent=$("wcrk").value+" %";
   $("wrkBody").hidden=!$("wrk").checked;
   $("stBody").hidden=!$("stOn").checked;
@@ -1860,7 +2138,10 @@ $("openFile").addEventListener("change",async e=>{
     if(doc.background&&doc.background.data) setBackground(new Blob([unb64(doc.background.data)],{type:doc.background.type||"image/jpeg"}),doc.background.name,true);
     else setBackground(null,"",true);
     const st=doc.settings;
+    $('wsource').value = 'procedural';
+    $('wair').value = '65';
     $('bgZoom').value = '100';
+    $('bgTarget').value = 'background';
     $('lineHeights').value = '[]';
     $('lineFit').value = 'natural';
     $('evFooterSizing').value = 'auto';
@@ -1904,6 +2185,7 @@ function draw(fit,measured,o){
   svg.dataset.w=o.W; svg.dataset.h=o.outputH; svg.dataset.unit=o.unit;
   svg.style.setProperty("--ar",(o.W/o.outputH).toFixed(4));
   const bg=$("bgc").value, fg=$("fgc").value;
+  const imageInLetters = $('bgTarget').value === 'letters';
   const defs=el("defs",{});
   if($("grain").checked){
     const flt=el("filter",{id:"grain",x:"0",y:"0",width:"100%",height:"100%"});
@@ -1915,6 +2197,8 @@ function draw(fit,measured,o){
   svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.outputH,fill:bg}));
   $("bgOpOut").textContent=$("bgOp").value+" %"; $("fgOpOut").textContent=$("fgOp").value+" %";
   $('bgZoomOut').textContent = $('bgZoom').value + ' %';
+  $('bgZoomHelp').textContent = 'Por debajo del 100 % se reduce; por encima se amplía y recorta desde el centro. El espacio libre muestra el color ' + (imageInLetters ? 'de la tinta.' : 'del papel.');
+  let imageGroup = null;
   if (BG.url) {
     const zoom = Math.max(0.1, Math.min(5, +$('bgZoom').value / 100 || 1));
     const imageW = BG.width || o.W, imageH = BG.height || o.H;
@@ -1924,19 +2208,24 @@ function draw(fit,measured,o){
     const clip = el('clipPath', { id: 'background-clip', clipPathUnits: 'userSpaceOnUse' });
     clip.appendChild(el('rect', { x: 0, y: 0, width: o.W, height: o.H }));
     defs.appendChild(clip);
-    const imageGroup = el('g', { 'clip-path': 'url(#background-clip)', 'data-background': '1' });
+    imageGroup = el('g', { 'clip-path': 'url(#background-clip)', 'data-image-target': imageInLetters ? 'letters' : 'background' });
     const bim = el('image', {
       x: (o.W - width) / 2, y: (o.H - height) / 2, width, height,
       preserveAspectRatio: 'xMidYMid meet', opacity: (+$('bgOp').value / 100).toFixed(2), 'data-bg': '1'
     });
     bim.setAttribute('href', BG.url);
     imageGroup.appendChild(bim);
-    svg.appendChild(imageGroup);
+    if (!imageInLetters) {
+      imageGroup.setAttribute('data-background', '1');
+      svg.appendChild(imageGroup);
+    }
   }
-  const g=el("g",{fill:fg,opacity:(+$("fgOp").value/100).toFixed(2)});
+  const inkGroup = el('g', { opacity: (+$('fgOp').value / 100).toFixed(2), 'data-ink': '1' });
+  const g=el("g",{fill:fg});
   const stamp=addStampFilter(defs,o.W,o.H);
-  if(stamp) g.setAttribute("filter","url(#stamp)");
-  svg.appendChild(g);
+  if(stamp) inkGroup.setAttribute("filter","url(#stamp)");
+  inkGroup.appendChild(g);
+  svg.appendChild(inkGroup);
   const k=o.scale, blockH=o.total*k;
   let y=o.m+(o.Hav-blockH)/2;
   const rows=[], used=new Set();
@@ -1974,13 +2263,32 @@ function draw(fit,measured,o){
       });
     }
   }
+  if (imageInLetters && imageGroup) {
+    // Una única máscara conserva las posiciones y escalas finales de las letras.
+    // La imagen mantiene el mismo encuadre en todas las líneas.
+    const mask = el('mask', {
+      id: 'letter-image-mask', maskUnits: 'userSpaceOnUse', maskContentUnits: 'userSpaceOnUse',
+      x: 0, y: 0, width: o.W, height: o.H, style: 'mask-type:alpha'
+    });
+    const letters = g.cloneNode(true);
+    letters.setAttribute('fill', '#ffffff');
+    mask.appendChild(letters);
+    defs.appendChild(mask);
+    const paint = el('g', { mask: 'url(#letter-image-mask)' });
+    paint.appendChild(el('rect', { x: 0, y: 0, width: o.W, height: o.H, fill: fg }));
+    paint.appendChild(imageGroup);
+    inkGroup.replaceChildren(paint);
+  }
   syncWrkOutputs();
   rowBounds=rows.map(r=>({top:r.top,bottom:r.bottom}));
   drawEvent(svg,o,used);
   if($("wrk").checked){
     const im=el("image",{x:0,y:0,width:o.W,height:o.H,preserveAspectRatio:"none","data-wrk":"1",style:"pointer-events:none"});
-    im.setAttribute("href",wrkOverlay(o.H/o.W,PREVIEW_GRID));
-    svg.appendChild(im);
+    const overlay = wrkOverlay(o.H/o.W,PREVIEW_GRID);
+    if (overlay) {
+      im.setAttribute('href', overlay);
+      svg.appendChild(im);
+    }
   }
   if($("grain").checked){
     svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.outputH,filter:"url(#grain)",opacity:"0.13",style:"mix-blend-mode:multiply;pointer-events:none"}));
@@ -2034,6 +2342,14 @@ async function fontCss(){
   return await googleFaceCss(f);
 }
 async function buildSvg(){
+  if ($('wrk').checked && $('wsource').value !== 'procedural') {
+    await PaperWrinkles.load($('wsource').value);
+    if (!PaperWrinkles.has($('wsource').value)) {
+      throw new Error('No se ha podido cargar la textura de papel. Comprueba assets/paper/textures.js.');
+    }
+    // La primera exportación también incluye la capa si se pulsa durante la carga.
+    run();
+  }
   const src=$("poster"), c=src.cloneNode(true);
   c.removeAttribute("style"); c.removeAttribute("id"); c.removeAttribute("role"); c.removeAttribute("aria-label");
   const u=src.dataset.unit==="mm"?"mm":"px";
@@ -2047,7 +2363,8 @@ async function buildSvg(){
     const pxW=exportSize(L).w;
     toast("Calculando las arrugas a resolución de imprenta…");
     await new Promise(r=>setTimeout(r,30));
-    wimg.setAttribute("href",wrkOverlay(L.posterH/L.W,Math.min(EXPORT_GRID_MAX,pxW)));
+    const gridMax = $('wsource').value === 'procedural' ? EXPORT_GRID_MAX : PHOTO_GRID_MAX;
+    wimg.setAttribute("href",wrkOverlay(L.posterH/L.W,Math.min(gridMax,pxW)));
     wimg.removeAttribute("data-wrk");
   }
   let embedded=true;
@@ -2068,7 +2385,12 @@ function download(blob,name){
   const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),4000);
 }
-async function busy(btn,fn){ btn.disabled=true; try{ await fn(); } finally{ btn.disabled=false; } }
+async function busy(btn,fn){
+  btn.disabled=true;
+  try{ await fn(); }
+  catch(error){ toast(error.message || 'No se ha podido completar la operación.'); }
+  finally{ btn.disabled=false; }
+}
 
 $("dlSvg").addEventListener("click",()=>busy($("dlSvg"),async()=>{
   toast("Preparando el SVG…");
@@ -2152,6 +2474,7 @@ $('loadTusker').addEventListener('click', () => {
   try{ applyUi(JSON.parse(localStorage.getItem(UI_KEY)||"null")); }catch(e){}
   fillEventSuggestions();
   const saved=readSettings();
+  if (saved && !saved.wsource) $('wsource').value = 'procedural';
   applySettings(saved);
   try{
     const batches=(await Store.get("fonts"))||[];
@@ -2183,6 +2506,9 @@ $('loadTusker').addEventListener('click', () => {
   } catch (err) { toast('No se han podido recuperar los datos de la partida.'); }
   restoring=false;
   saveSettings();
+  PaperWrinkles.ready.then(() => schedule()).catch(() => {
+    toast('No se han podido cargar las texturas de papel. Comprueba que assets/paper/textures.js acompaña al editor.');
+  });
   loadAndRun();
   document.fonts.ready.then(()=>{cache.clear();schedule()});
 })();
