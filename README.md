@@ -43,6 +43,8 @@ Incluye obras de **Lorc, Delapouite, Skoll y el resto de colaboradores**, bajo *
 
 [Vista de la biblioteca](docs/iconos-biblioteca.png) · [Cartel de ejemplo con icono](docs/iconos-cartel.png). El águila del ejemplo es de Lorc, de [Game-icons.net](https://game-icons.net/1x1/lorc/eagle-emblem.html), con licencia [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); se ha eliminado el fondo y ajustado el color y el tamaño.
 
+En **Estilo → Papel y pegado** hay 16 combinaciones de papel y tinta. **Invertir papel y tinta** permite obtener sus variantes sin repetir muestras. Las cinco nuevas son burdeos/mantequilla, violeta/lima, petróleo/coral, azul pizarra/lavanda y oliva/rosa empolvado. [Ver las cinco combinaciones en un cartel](docs/paletas-nuevas.png). La ayuda recoge los colores y sus referencias de diseño.
+
 En **Estilo → Imagen**, sube una foto o textura y elige **Aplicar imagen a → Fondo o Letras**. En Letras, la imagen rellena el título sobre el color del papel, con el mismo zoom, encaje y opacidad. La elección se guarda en el proyecto y se incluye al exportar PNG o SVG.
 
 [Comparativa de la misma imagen aplicada al fondo o a las letras](docs/imagen-fondo-letras.jpg).

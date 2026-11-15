@@ -205,24 +205,44 @@ para mostrarlo. En el PNG sale con su tamaño real.
 PAPEL Y PEGADO
 --------------
 
-Las muestras ofrecen trece combinaciones de papel y tinta. Al pasar el ratón
+Las muestras ofrecen dieciséis combinaciones de papel y tinta. Al pasar el ratón
 sobre cada una se muestran su nombre y los códigos de color.
 «Invertir papel y tinta» intercambia los dos colores actuales, tanto si proceden
 de una muestra como si los has elegido manualmente. Pulsa de nuevo para volver.
 El resultado se guarda y exporta con el cartel.
 
-Las seis incorporaciones son:
+Las combinaciones de color, además de salvia/marfil, carbón/crema, teja/crema,
+amarillo/negro y marino/melocotón, son:
   Malva / mostaza · OATH     #794C61 / #D2AD43 (aproximación a la referencia)
   Cobalto / mandarina        #1739B5 / #FFD07A
   Menta / índigo             #BDE8D0 / #382278
   Albaricoque / petróleo     #FFC08A / #064F4A
   Rosa / frambuesa           #F4B8CE / #7B173E
   Cacao / celeste            #49332C / #9DDFEA
+  Burdeos / mantequilla      #662222 / #F5DAA7
+  Violeta / lima             #4C2773 / #D5ED84
+  Petróleo / coral           #174B52 / #FFA08B
+  Azul pizarra / lavanda     #424874 / #DCD6F7
+  Oliva / rosa empolvado     #424B25 / #F2C4D0
+
+Se han retirado las muestras marfil/bosque y crema/teja, muy parecidas a invertir
+carbón/crema y teja/crema. El botón Invertir permite obtener esas variantes sin
+ocupar otra muestra. Los carteles guardados conservan sus colores exactos.
+
+Las cinco últimas combinaciones añaden parejas cálidas, complementarias y frías,
+adaptando su luminosidad para distinguir bien papel y tinta. Sus contrastes
+calculados en sRGB van de 4,92:1 a 8,82:1 a opacidad completa y sin efectos.
+Los tonos se han seleccionado y adaptado para cartelería a partir de las
+referencias siguientes: burdeos y lavanda proceden de parejas de Color Hunt;
+las otras tres combinan colores opuestos con luminosidades ajustadas.
 
 Referencias de color consultadas para la selección y adaptación de tonos:
 https://colorhunt.co/palettes/pink-orange
 https://colorhunt.co/palettes/blue-brown
 https://colordrop.io/palette/1121
+https://colorhunt.co/palette/662222842a3ba3485af5daa7
+https://colorhunt.co/palette/f4eeffdcd6f7a6b1e1424874
+https://www.canva.com/colors/color-wheel/
 
 Imagen: una foto o textura. Tras subirla, «Aplicar imagen a» permite elegir:
   Fondo    Se coloca por encima del color del papel y por debajo del texto, como antes.
