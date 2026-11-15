@@ -1,0 +1,356 @@
+{
+  "delapouite/elephant": {
+    "id": "elephant",
+    "name": "Elefante",
+    "category": "Animales",
+    "tags": "animal safari trompa"
+  },
+  "lorc/eagle-emblem": {
+    "id": "eagle-emblem",
+    "name": "Águila heráldica",
+    "category": "Emblemas",
+    "tags": "ave alas escudo"
+  },
+  "delapouite/griffin-symbol": {
+    "id": "griffin-symbol",
+    "name": "Grifo",
+    "category": "Emblemas",
+    "tags": "criatura alas heráldica"
+  },
+  "lorc/wolf-head": {
+    "id": "wolf-head",
+    "name": "Lobo",
+    "category": "Animales",
+    "tags": "animal bosque cabeza"
+  },
+  "lorc/lion": {
+    "id": "lion",
+    "name": "León",
+    "category": "Animales",
+    "tags": "animal felino melena"
+  },
+  "lorc/dragon-head": {
+    "id": "dragon-head",
+    "name": "Dragón",
+    "category": "Animales",
+    "tags": "fantasía criatura cabeza"
+  },
+  "lorc/raven": {
+    "id": "raven",
+    "name": "Cuervo",
+    "category": "Animales",
+    "tags": "ave pájaro"
+  },
+  "lorc/owl": {
+    "id": "owl",
+    "name": "Búho",
+    "category": "Animales",
+    "tags": "ave pájaro noche"
+  },
+  "lorc/bull": {
+    "id": "bull",
+    "name": "Toro",
+    "category": "Animales",
+    "tags": "animal cuernos"
+  },
+  "lorc/butterfly": {
+    "id": "butterfly",
+    "name": "Mariposa",
+    "category": "Animales",
+    "tags": "insecto alas"
+  },
+  "lorc/bee": {
+    "id": "bee",
+    "name": "Abeja",
+    "category": "Animales",
+    "tags": "insecto miel"
+  },
+  "lorc/winged-shield": {
+    "id": "winged-shield",
+    "name": "Escudo alado",
+    "category": "Emblemas",
+    "tags": "alas defensa"
+  },
+  "lorc/winged-sword": {
+    "id": "winged-sword",
+    "name": "Espada alada",
+    "category": "Emblemas",
+    "tags": "alas arma"
+  },
+  "lorc/crossed-swords": {
+    "id": "crossed-swords",
+    "name": "Espadas cruzadas",
+    "category": "Aventura",
+    "tags": "armas batalla combate"
+  },
+  "lorc/battle-axe": {
+    "id": "battle-axe",
+    "name": "Hacha de batalla",
+    "category": "Aventura",
+    "tags": "arma combate"
+  },
+  "delapouite/viking-shield": {
+    "id": "viking-shield",
+    "name": "Escudo vikingo",
+    "category": "Aventura",
+    "tags": "defensa combate"
+  },
+  "lorc/crown": {
+    "id": "crown",
+    "name": "Corona",
+    "category": "Emblemas",
+    "tags": "rey reina reino"
+  },
+  "lorc/laurel-crown": {
+    "id": "laurel-crown",
+    "name": "Corona de laurel",
+    "category": "Emblemas",
+    "tags": "victoria hojas"
+  },
+  "lorc/laurels": {
+    "id": "laurels",
+    "name": "Laureles",
+    "category": "Emblemas",
+    "tags": "victoria hojas marco"
+  },
+  "lorc/castle": {
+    "id": "castle",
+    "name": "Castillo",
+    "category": "Aventura",
+    "tags": "fortaleza medieval reino"
+  },
+  "delapouite/tower-bridge": {
+    "id": "tower-bridge",
+    "name": "Puente con torres",
+    "category": "Aventura",
+    "tags": "castillo medieval ciudad"
+  },
+  "delapouite/viking-helmet": {
+    "id": "viking-helmet",
+    "name": "Casco vikingo",
+    "category": "Aventura",
+    "tags": "cuernos guerrero"
+  },
+  "lorc/anchor": {
+    "id": "anchor",
+    "name": "Ancla",
+    "category": "Aventura",
+    "tags": "barco mar pirata"
+  },
+  "lorc/compass": {
+    "id": "compass",
+    "name": "Brújula",
+    "category": "Aventura",
+    "tags": "mapa exploración norte"
+  },
+  "lorc/mountains": {
+    "id": "mountains",
+    "name": "Montañas",
+    "category": "Naturaleza",
+    "tags": "paisaje cumbre nieve"
+  },
+  "lorc/pine-tree": {
+    "id": "pine-tree",
+    "name": "Pino",
+    "category": "Naturaleza",
+    "tags": "árbol bosque"
+  },
+  "lorc/oak": {
+    "id": "oak",
+    "name": "Roble",
+    "category": "Naturaleza",
+    "tags": "árbol bosque"
+  },
+  "delapouite/flower-emblem": {
+    "id": "flower-emblem",
+    "name": "Flor heráldica",
+    "category": "Emblemas",
+    "tags": "naturaleza pétalos"
+  },
+  "lorc/rose": {
+    "id": "rose",
+    "name": "Rosa",
+    "category": "Naturaleza",
+    "tags": "flor pétalos"
+  },
+  "lorc/sun": {
+    "id": "sun",
+    "name": "Sol",
+    "category": "Naturaleza",
+    "tags": "día luz calor"
+  },
+  "lorc/moon": {
+    "id": "moon",
+    "name": "Luna",
+    "category": "Naturaleza",
+    "tags": "noche cielo"
+  },
+  "delapouite/polar-star": {
+    "id": "polar-star",
+    "name": "Estrella polar",
+    "category": "Emblemas",
+    "tags": "norte cielo"
+  },
+  "lorc/lightning-trio": {
+    "id": "lightning-trio",
+    "name": "Rayos",
+    "category": "Naturaleza",
+    "tags": "tormenta electricidad relámpago"
+  },
+  "skoll/hearts": {
+    "id": "hearts",
+    "name": "Corazón",
+    "category": "Símbolos",
+    "tags": "amor vida palo cartas"
+  },
+  "lorc/broken-heart": {
+    "id": "broken-heart",
+    "name": "Corazón roto",
+    "category": "Símbolos",
+    "tags": "amor vida"
+  },
+  "lorc/diamond-hard": {
+    "id": "diamond-hard",
+    "name": "Diamante",
+    "category": "Símbolos",
+    "tags": "gema cristal tesoro"
+  },
+  "lorc/hourglass": {
+    "id": "hourglass",
+    "name": "Reloj de arena",
+    "category": "Símbolos",
+    "tags": "tiempo duración"
+  },
+  "skoll/pocket-watch": {
+    "id": "pocket-watch",
+    "name": "Reloj de bolsillo",
+    "category": "Símbolos",
+    "tags": "tiempo hora"
+  },
+  "delapouite/dice-six-faces-six": {
+    "id": "dice-six-faces-six",
+    "name": "Dado de seis",
+    "category": "Juegos",
+    "tags": "azar d6 seis caras"
+  },
+  "delapouite/dice-twenty-faces-twenty": {
+    "id": "dice-twenty-faces-twenty",
+    "name": "Dado de veinte",
+    "category": "Juegos",
+    "tags": "azar d20 rol veinte caras"
+  },
+  "delapouite/meeple": {
+    "id": "meeple",
+    "name": "Meeple",
+    "category": "Juegos",
+    "tags": "jugador peón ficha tablero"
+  },
+  "lorc/poker-hand": {
+    "id": "poker-hand",
+    "name": "Mano de cartas",
+    "category": "Juegos",
+    "tags": "póker baraja azar"
+  },
+  "skoll/chess-knight": {
+    "id": "chess-knight",
+    "name": "Caballo de ajedrez",
+    "category": "Juegos",
+    "tags": "pieza tablero"
+  },
+  "skoll/chess-rook": {
+    "id": "chess-rook",
+    "name": "Torre de ajedrez",
+    "category": "Juegos",
+    "tags": "pieza tablero"
+  },
+  "skoll/chess-queen": {
+    "id": "chess-queen",
+    "name": "Reina de ajedrez",
+    "category": "Juegos",
+    "tags": "pieza tablero"
+  },
+  "lorc/trophy": {
+    "id": "trophy",
+    "name": "Trofeo",
+    "category": "Juegos",
+    "tags": "premio victoria copa"
+  },
+  "delapouite/coffee-cup": {
+    "id": "coffee-cup",
+    "name": "Taza de café",
+    "category": "Símbolos",
+    "tags": "bebida pausa"
+  },
+  "lorc/gears": {
+    "id": "gears",
+    "name": "Engranajes",
+    "category": "Símbolos",
+    "tags": "máquina industria steampunk"
+  },
+  "delapouite/steampunk-goggles": {
+    "id": "steampunk-goggles",
+    "name": "Gafas steampunk",
+    "category": "Aventura",
+    "tags": "máquina industria"
+  },
+  "delapouite/space-shuttle": {
+    "id": "space-shuttle",
+    "name": "Transbordador",
+    "category": "Espacio",
+    "tags": "nave ciencia ficción"
+  },
+  "lorc/rocket": {
+    "id": "rocket",
+    "name": "Cohete",
+    "category": "Espacio",
+    "tags": "nave ciencia ficción"
+  },
+  "delapouite/ufo": {
+    "id": "ufo",
+    "name": "Ovni",
+    "category": "Espacio",
+    "tags": "alienígena nave ciencia ficción"
+  },
+  "skoll/atom": {
+    "id": "atom",
+    "name": "Átomo",
+    "category": "Espacio",
+    "tags": "ciencia energía"
+  },
+  "lorc/mushroom": {
+    "id": "mushroom",
+    "name": "Seta",
+    "category": "Naturaleza",
+    "tags": "bosque hongo"
+  },
+  "lorc/book-cover": {
+    "id": "book-cover",
+    "name": "Libro",
+    "category": "Aventura",
+    "tags": "magia historia conocimiento"
+  },
+  "lorc/treasure-map": {
+    "id": "treasure-map",
+    "name": "Mapa del tesoro",
+    "category": "Aventura",
+    "tags": "pirata exploración"
+  },
+  "lorc/key": {
+    "id": "key",
+    "name": "Llave",
+    "category": "Símbolos",
+    "tags": "puerta tesoro abrir"
+  },
+  "lorc/padlock": {
+    "id": "padlock",
+    "name": "Candado",
+    "category": "Símbolos",
+    "tags": "puerta cerrar"
+  },
+  "lorc/heart-organ": {
+    "id": "heart-organ",
+    "name": "Corazón anatómico",
+    "category": "Símbolos",
+    "tags": "vida órgano"
+  }
+}

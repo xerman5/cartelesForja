@@ -3,7 +3,7 @@
 Dos editores de carteles en una aplicación web estática, sin instalación de dependencias:
 
 - **Partidas** (`index.html`): portada, descripción, fecha, horario, lugar, plazas y valoraciones BGG. Exporta PNG y WebP.
-- **Tipográfico** (`tipografico.html`): texto ajustado al ancho, alturas por línea, fuentes variables o propias, papel, grano, arrugas y datos de evento con zona inferior de altura automática, integrada en el cartel o como anexo pegado debajo. Exporta PNG y SVG, con formatos para pantalla e imprenta.
+- **Tipográfico** (`tipografico.html`): líneas de texto o iconos, alturas por línea, fuentes variables o propias, papel, grano, arrugas y datos de evento con zona inferior de altura automática, integrada en el cartel o como anexo pegado debajo. Exporta PNG y SVG, con formatos para pantalla e imprenta.
 
 ## Uso local
 
@@ -28,6 +28,20 @@ En el editor tipográfico, Tusker aparece automáticamente en el selector, agrup
 Las fuentes de Google necesitan conexión. Las fuentes locales permiten trabajar sin ella. El JSON y el SVG del editor tipográfico pueden incluir las fuentes utilizadas.
 
 Consulta la [ayuda completa de Cartel a caja](docs/cartel-a-caja.txt) para los efectos, los formatos de impresión y la exportación.
+
+## Iconos en el cartel tipográfico
+
+En **Texto**, cada línea tiene un selector **Texto / Icono**. Usa **+ Texto** o **+ Icono** para añadir líneas, las flechas para ordenarlas y **×** para eliminarlas. Puedes pegar varias líneas en un campo de texto o usar **Edición multilínea**. Se admiten hasta 14 líneas no vacías en el cartel.
+
+La biblioteca incluye el catálogo completo del repositorio de Game-icons.net: **4.239 SVG** (4.180 iconos y 59 insignias circulares). Busca por nombre original en inglés, por los nombres españoles de la selección inicial o por palabras relacionadas en español, como «caballo», «dragón», «barco» o «dado». Puedes combinar palabras y filtrar por categoría y autor. Los resultados se muestran en páginas de hasta 96 iconos; las miniaturas se cargan al aparecer en pantalla.
+
+Los iconos se centran en su línea y conservan sus proporciones en todos los repartos. En **Por línea** puedes reservarles más o menos altura; **Color propio** permite darles una tinta distinta. Comparten los efectos del cartel y se incluyen como vectores en el SVG y en la descarga PNG.
+
+Los iconos funcionan sin conexión, también abriendo el HTML directamente: conserva **toda** la carpeta `assets/icons/` junto al editor. El índice ocupa unos 900 KB y los dibujos adicionales se cargan por bloques solo al necesitarlos; el catálogo completo ocupa unos 7 MB. Los 59 iconos anteriores conservan sus identificadores. No cambian las claves de almacenamiento ni el formato `.cartel.json`: se representan dentro del texto como `[icon:elephant]` o `[icon:elephant:#d2ad43]`. Los proyectos anteriores siguen abriéndose.
+
+Incluye obras de **Lorc, Delapouite, Skoll y el resto de colaboradores**, bajo **CC BY 3.0** o **CC0** según el autor. En **Créditos de los iconos utilizados** puedes copiar o descargar la atribución correspondiente; también se incrusta en los metadatos de PNG y SVG. Consulta la [procedencia y actualización de la biblioteca](assets/icons/README.md).
+
+[Vista de la biblioteca](docs/iconos-biblioteca.png) · [Cartel de ejemplo con icono](docs/iconos-cartel.png). El águila del ejemplo es de Lorc, de [Game-icons.net](https://game-icons.net/1x1/lorc/eagle-emblem.html), con licencia [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/); se ha eliminado el fondo y ajustado el color y el tamaño.
 
 En **Estilo → Imagen**, sube una foto o textura y elige **Aplicar imagen a → Fondo o Letras**. En Letras, la imagen rellena el título sobre el color del papel, con el mismo zoom, encaje y opacidad. La elección se guarda en el proyecto y se incluye al exportar PNG o SVG.
 

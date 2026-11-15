@@ -96,6 +96,36 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--line);border-rad
 .btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:6px 12px;cursor:pointer}
 .btn:hover{border-color:var(--accent)}
 .btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+.content-lines{display:flex;flex-direction:column;gap:10px}
+.content-line{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:8px;min-width:0}
+.line-heading,.line-actions,.line-content{display:flex;align-items:center;gap:6px;min-width:0}
+.line-heading>span{font-size:12px;color:var(--muted);flex:1}
+.line-actions .btn{padding:3px 8px}
+.line-content select{width:88px;flex:none;padding:7px 5px}
+.line-content>input,.line-content>.btn{flex:1;min-width:0}
+.line-icon-choice{display:flex;align-items:center;gap:8px;text-align:left}
+.line-icon-choice svg{width:28px;height:28px;flex:none;fill:currentColor}
+.line-color{display:flex;align-items:center;gap:8px;font-size:12px;flex-wrap:wrap}
+.line-add{display:flex;gap:8px;flex-wrap:wrap}
+.icon-library{width:min(720px,calc(100% - 24px));max-height:85vh;border:1px solid var(--line);border-radius:12px;background:var(--box);color:var(--fg);padding:0}
+.icon-library::backdrop{background:rgb(0 0 0/.45)}
+.icon-library-body{padding:18px;display:flex;flex-direction:column;gap:14px;max-height:calc(85vh - 2px)}
+.icon-library-body>*{flex-shrink:0}
+.icon-library-body>.icon-grid{flex:1 1 auto;min-height:96px}
+.icon-library h2{font-size:20px;margin:0}
+.icon-library .drawer-head{align-items:flex-start}
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:8px;max-height:43vh;overflow:auto;padding:3px}
+.icon-tile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px;font-size:12px}
+.icon-tile svg{width:48px;height:48px;fill:currentColor;flex:none}
+.icon-preview{display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:none}
+.icon-preview:empty::before{content:'';width:28px;height:28px;border-radius:6px;background:var(--line-soft)}
+.icon-tile small{font-size:10px;color:var(--muted)}
+.icon-pages{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.icon-pages span{font-size:12px;color:var(--muted);text-align:center}
+.icon-credits{display:flex;flex-direction:column;gap:6px}
+.icon-credits textarea{font-size:11px;min-height:72px}
+.icon-library a{color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
 .resrow{display:flex;gap:8px;align-items:center}
 .resrow select{flex:1}
 .resrow input{width:86px;flex:none}
@@ -170,12 +200,24 @@ tr:last-child td{border-bottom:0}
 <details class="box" open data-box="texto">
       <summary><span class="num">2</span><span class="ttl">Texto</span><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></summary>
       <div class="box-body">
-        <div class="field">
-          <label for="txt">Una línea por fila</label>
+        <p class="hint" id="contentHelp">Cada línea puede ser texto o un icono. Hasta 14 líneas; los iconos conservan sus proporciones.</p>
+        <div id="contentLines" class="content-lines" aria-label="Líneas del cartel" aria-describedby="contentHelp"></div>
+        <div class="line-add">
+          <button type="button" class="btn" id="addTextLine">+ Texto</button>
+          <button type="button" class="btn" id="addIconLine">+ Icono</button>
+        </div>
+        <details class="more"><summary>Edición multilínea</summary><div class="field">
+          <label for="txt">Una línea por fila · también puedes pegar varias a la vez</label>
           <textarea id="txt" spellcheck="false">An
 Infamous
 Traffic</textarea>
-        </div>
+          <p class="hint">Los iconos se representan como [icon:elephant]. Las filas vacías no se imprimen.</p>
+        </div></details>
+        <details class="more" id="iconCredits" hidden><summary>Créditos de los iconos utilizados</summary><div class="icon-credits">
+          <p class="hint">Acompaña tu cartel con los créditos de los iconos CC BY. Los CC0 no requieren atribución. También se guardan en los metadatos del PNG y del SVG.</p>
+          <textarea id="iconCreditsText" readonly aria-label="Créditos para acompañar el cartel"></textarea>
+          <button type="button" class="linkbtn" id="downloadIconCredits">Descargar créditos</button>
+        </div></details>
         <label class="check"><input type="checkbox" id="upper" checked> Pasar a mayúsculas</label>
         <div class="field">
           <span id="modeLbl" style="font-weight:500">Reparto</span>
@@ -595,8 +637,25 @@ Traffic</textarea>
 
 <svg id="measure" xmlns="http://www.w3.org/2000/svg"><text id="mText" x="0" y="100" font-size="100"></text><text id="mLast" x="0" y="100" font-size="100"></text></svg>
 
+<dialog id="iconLibrary" class="icon-library" aria-labelledby="iconLibraryTitle">
+  <div class="icon-library-body">
+    <div class="drawer-head"><div><h2 id="iconLibraryTitle">Biblioteca de iconos</h2><p class="hint">Iconos vectoriales gratuitos, incluidos para uso sin conexión.</p></div><button type="button" class="btn" id="closeIconLibrary">Cerrar</button></div>
+    <div class="two">
+      <div class="field"><label for="iconSearch">Buscar iconos</label><input type="text" id="iconSearch" placeholder="Elefante, dragón, barco…" autocomplete="off" aria-describedby="iconSearchHelp"></div>
+      <div class="field"><label for="iconCategory">Categoría</label><select id="iconCategory"><option value="">Todas</option></select></div>
+    </div>
+    <p class="hint" id="iconSearchHelp">Busca por nombre en inglés o palabras en español. Puedes combinar varias palabras.</p>
+    <div class="field"><label for="iconAuthor">Autor</label><select id="iconAuthor"><option value="">Todos los autores</option></select></div>
+    <p class="hint" id="iconCount" role="status"></p>
+    <div id="iconGrid" class="icon-grid" aria-label="Elegir un icono"></div>
+    <div class="icon-pages" id="iconPagination"><button type="button" class="btn" id="iconPrev">← Anterior</button><span id="iconPage" aria-live="polite"></span><button type="button" class="btn" id="iconNext">Siguiente →</button></div>
+    <p class="hint">De <a href="https://game-icons.net/" target="_blank" rel="noopener">Game-icons.net</a>, por Lorc, Delapouite y otros colaboradores · <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a> o <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0</a>, según el autor. Al elegir un icono se preparan sus créditos.</p>
+  </div>
+</dialog>
+
 <script src="fonts/tusker/bundled.js"></script>
 <script src="assets/paper/textures.js"></script>
+<script src="assets/icons/library.js"></script>
 <script>
 // Las fotografías aportan la iluminación observada, sin inventar una geometría 3D.
 const PaperWrinkles = (() => {
@@ -1141,6 +1200,316 @@ function exportSize(L){
 const $ = id => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
 
+// Los iconos viven en txt como una fila [icon:id] o [icon:id:#rrggbb].
+// Así se conservan las claves de almacenamiento y el formato JSON de los proyectos.
+const iconLibrary = (window.forjaIcons || []).map(icon => {
+  const author = window.forjaIconAuthors?.[icon.authorId];
+  return {
+    ...icon,
+    author: author?.name || icon.author,
+    authorUrl: author?.url || icon.authorUrl,
+    license: author?.license || icon.license || 'CC BY 3.0',
+    licenseUrl: author?.licenseUrl || icon.licenseUrl || 'https://creativecommons.org/licenses/by/3.0/',
+    source: icon.source || (icon.authorId === 'badges'
+      ? 'https://github.com/game-icons/icons/blob/' + window.forjaIconCatalog.revision + '/' + icon.sourcePath + '.svg'
+      : 'https://game-icons.net/1x1/' + icon.sourcePath + '.html')
+  };
+});
+const iconsById = new Map(iconLibrary.map(icon => [icon.id, icon]));
+const iconSearchIndex = new Map(iconLibrary.map(icon => [icon.id,
+  searchKey([icon.id, icon.name, icon.category, icon.tags, icon.author].join(' '))]));
+const iconChunkLoads = new Map();
+const iconChunkFailures = new Set();
+const iconPosterLoads = new Set();
+const iconChunkMembers = new Map();
+iconLibrary.forEach(icon => {
+  if (!icon.chunk) return;
+  if (!iconChunkMembers.has(icon.chunk)) iconChunkMembers.set(icon.chunk, []);
+  iconChunkMembers.get(icon.chunk).push(icon);
+});
+const ICON_PAGE_SIZE = 96;
+let iconPage = 0;
+let iconPreviewObserver = null;
+const iconBounds = new Map();
+let contentLinesKey = null;
+let iconTarget = null;
+function parseContentLine(text) {
+  const match = /^\[icon:([a-z0-9-]+)(?::(#[a-f0-9]{6}))?\]$/i.exec(text.trim());
+  if (!match) return { text, icon: null };
+  const id = match[1].toLowerCase();
+  return { text, icon: iconsById.get(id) || null, iconId: id, color: match[2] || null };
+}
+function iconToken(icon, color) {
+  return '[icon:' + icon.id + (color ? ':' + color : '') + ']';
+}
+function editorLines() {
+  return $('txt').value.replace(/\r/g, '').split('\n');
+}
+function editorHeights() {
+  const heights = readLineHeights();
+  let index = 0;
+  return editorLines().map(text => text.trim() ? (heights[index++] ?? 100) : 100);
+}
+function iconSvg(icon) {
+  const svg = el('svg', { viewBox: icon.viewBox, 'aria-hidden': 'true', focusable: 'false' });
+  const paths = icon.paths || [{ d: 'M192 192h128v128H192z', opacity: '0.2' }];
+  if (!icon.paths) svg.setAttribute('data-icon-preview', icon.id);
+  paths.forEach(path => svg.appendChild(el('path', path)));
+  return svg;
+}
+function loadIconPaths(icon, retry = false) {
+  if (icon.paths) return Promise.resolve();
+  const chunk = icon.chunk;
+  if (!chunk || (iconChunkFailures.has(chunk) && !retry)) return Promise.reject(new Error('No se ha podido cargar el icono «' + icon.name + '».'));
+  if (!iconChunkLoads.has(chunk)) {
+    iconChunkFailures.delete(chunk);
+    const promise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      const fail = () => {
+        clearTimeout(timeout); script.remove(); iconChunkLoads.delete(chunk); iconChunkFailures.add(chunk);
+        reject(new Error('No se han podido cargar los iconos. Comprueba que assets/icons/' + chunk + ' acompaña al editor.'));
+      };
+      const timeout = setTimeout(fail, 15000);
+      script.src = 'assets/icons/' + chunk;
+      script.onerror = fail;
+      script.onload = () => {
+        const members = iconChunkMembers.get(chunk) || [];
+        if (members.some(member => !window.forjaIconPaths?.[member.id]?.length)) { fail(); return; }
+        members.forEach(member => {
+          member.paths = window.forjaIconPaths[member.id];
+          delete window.forjaIconPaths[member.id];
+          document.querySelectorAll('.line-icon-choice [data-icon-preview="' + member.id + '"]').forEach(svg => svg.replaceWith(iconSvg(member)));
+        });
+        clearTimeout(timeout); script.remove(); resolve();
+      };
+      document.head.appendChild(script);
+    });
+    iconChunkLoads.set(chunk, promise);
+  }
+  return iconChunkLoads.get(chunk);
+}
+function measureIcon(icon) {
+  if (!icon.paths) return { x: 0, y: 0, width: 512, height: 512 };
+  if (!iconBounds.has(icon.id)) {
+    const svg = iconSvg(icon);
+    $('measure').appendChild(svg);
+    const bounds = svg.getBBox();
+    svg.remove();
+    iconBounds.set(icon.id, { x: bounds.x, y: bounds.y, width: Math.max(1, bounds.width), height: Math.max(1, bounds.height) });
+  }
+  return iconBounds.get(icon.id);
+}
+function contentButton(label, action, title) {
+  const button = document.createElement('button');
+  button.type = 'button'; button.className = 'btn'; button.textContent = label;
+  if (title) { button.title = title; button.setAttribute('aria-label', title); }
+  button.addEventListener('click', action);
+  return button;
+}
+function updateContent(lines, heights = editorHeights(), focusIndex = null) {
+  $('txt').value = lines.join('\n');
+  $('lineHeights').value = JSON.stringify(lines.map((text, i) => text.trim() ? (heights[i] ?? 100) : null).filter(value => value != null));
+  contentLinesKey = null;
+  syncContentLines();
+  if (focusIndex != null) $('contentLines').children[focusIndex]?.querySelector('.line-content input, .line-icon-choice')?.focus();
+  schedule();
+}
+function syncContentLines() {
+  const lines = editorLines();
+  $('addTextLine').disabled = lines.length >= 14;
+  $('addIconLine').disabled = lines.length >= 14 || !iconLibrary.length;
+  const key = $('txt').value;
+  if (key === contentLinesKey) return;
+  contentLinesKey = key;
+  $('contentLines').replaceChildren();
+  lines.forEach((text, index) => {
+    const parsed = parseContentLine(text);
+    const field = document.createElement('div'); field.className = 'content-line';
+    const heading = document.createElement('div'); heading.className = 'line-heading';
+    const label = document.createElement('span'); label.textContent = 'Línea ' + (index + 1);
+    const actions = document.createElement('div'); actions.className = 'line-actions';
+    [-1, 1].forEach(direction => {
+      const button = contentButton(direction < 0 ? '↑' : '↓', () => {
+        const next = editorLines(), heights = editorHeights();
+        const target = index + direction;
+        [next[index], next[target]] = [next[target], next[index]];
+        [heights[index], heights[target]] = [heights[target], heights[index]];
+        updateContent(next, heights);
+        $('contentLines').children[target]?.querySelector('.line-actions button')?.focus();
+      }, (direction < 0 ? 'Subir' : 'Bajar') + ' línea ' + (index + 1));
+      button.disabled = index + direction < 0 || index + direction >= lines.length;
+      actions.appendChild(button);
+    });
+    actions.appendChild(contentButton('×', () => {
+      const next = editorLines(), heights = editorHeights();
+      next.splice(index, 1); heights.splice(index, 1);
+      updateContent(next, heights, Math.min(index, next.length - 1));
+      if (!next.length) $('addTextLine').focus();
+    }, 'Eliminar línea ' + (index + 1)));
+    heading.append(label, actions);
+    const content = document.createElement('div'); content.className = 'line-content';
+    const type = document.createElement('select');
+    type.setAttribute('aria-label', 'Tipo de la línea ' + (index + 1));
+    [['text', 'Texto'], ['icon', 'Icono']].forEach(([value, name]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = name; type.appendChild(option);
+    });
+    type.value = parsed.iconId ? 'icon' : 'text';
+    type.addEventListener('change', () => {
+      if (type.value === 'icon') { type.value = 'text'; openIconLibrary(index); }
+      else { const next = editorLines(); next[index] = ''; updateContent(next, undefined, index); }
+    });
+    content.appendChild(type);
+    if (parsed.iconId) {
+      const choose = contentButton('', () => openIconLibrary(index));
+      choose.classList.add('line-icon-choice');
+      choose.setAttribute('aria-label', 'Cambiar icono de la línea ' + (index + 1));
+      if (parsed.icon) choose.appendChild(iconSvg(parsed.icon));
+      const name = document.createElement('span'); name.textContent = parsed.icon ? parsed.icon.name : 'Icono no disponible · elegir otro';
+      choose.appendChild(name); content.appendChild(choose);
+    } else {
+      const input = document.createElement('input'); input.type = 'text'; input.value = text;
+      input.placeholder = 'Escribe una palabra o frase'; input.setAttribute('aria-label', 'Texto de la línea ' + (index + 1));
+      input.addEventListener('input', () => {
+        const next = editorLines(), heights = editorHeights(); next[index] = input.value;
+        $('txt').value = next.join('\n');
+        $('lineHeights').value = JSON.stringify(next.map((text, i) => text.trim() ? heights[i] : null).filter(value => value != null));
+        // Conserva el foco y la selección mientras se escribe.
+        contentLinesKey = $('txt').value;
+        schedule();
+      });
+      input.addEventListener('change', () => {
+        if (parseContentLine(input.value).iconId) { contentLinesKey = null; syncContentLines(); }
+      });
+      input.addEventListener('paste', event => {
+        const pasted = event.clipboardData?.getData('text');
+        if (!pasted || !/[\r\n]/.test(pasted)) return;
+        event.preventDefault();
+        const next = editorLines(), heights = editorHeights();
+        const replacement = (input.value.slice(0, input.selectionStart) + pasted.replace(/\r/g, '') + input.value.slice(input.selectionEnd)).split('\n');
+        const available = Math.max(1, 14 - next.length + 1);
+        const added = replacement.slice(0, available);
+        next.splice(index, 1, ...added);
+        heights.splice(index, 1, heights[index], ...added.slice(1).map(() => 100));
+        updateContent(next, heights, index);
+        if (replacement.length > available) toast('Se admiten hasta 14 líneas.');
+      });
+      content.appendChild(input);
+    }
+    field.append(heading, content);
+    if (parsed.icon) {
+      const colors = document.createElement('div'); colors.className = 'line-color';
+      const label = document.createElement('label'); label.className = 'check';
+      const custom = document.createElement('input'); custom.type = 'checkbox'; custom.checked = !!parsed.color;
+      label.append(custom, document.createTextNode('Color propio'));
+      const color = document.createElement('input'); color.type = 'color'; color.value = parsed.color || $('fgc').value;
+      color.hidden = !parsed.color; color.setAttribute('aria-label', 'Color del icono de la línea ' + (index + 1));
+      custom.addEventListener('change', () => {
+        const next = editorLines(); next[index] = iconToken(parsed.icon, custom.checked ? color.value : null);
+        updateContent(next);
+      });
+      color.addEventListener('input', () => {
+        const next = editorLines(); next[index] = iconToken(parsed.icon, color.value);
+        $('txt').value = next.join('\n'); contentLinesKey = $('txt').value; schedule();
+      });
+      colors.append(label, color); field.appendChild(colors);
+    }
+    $('contentLines').appendChild(field);
+  });
+}
+function openIconLibrary(index = null) {
+  iconTarget = index;
+  $('iconSearch').value = ''; $('iconCategory').value = ''; $('iconAuthor').value = ''; iconPage = 0;
+  renderIconLibrary();
+  $('iconLibrary').showModal(); $('iconSearch').focus();
+}
+function searchKey(text) { return text.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function renderIconLibrary() {
+  const words = searchKey($('iconSearch').value).split(/\s+/).filter(Boolean);
+  const category = $('iconCategory').value, author = $('iconAuthor').value;
+  const matches = iconLibrary.filter(icon => (!category || icon.category === category) && (!author || icon.author === author)
+    && words.every(word => iconSearchIndex.get(icon.id).includes(word)));
+  const pages = Math.max(1, Math.ceil(matches.length / ICON_PAGE_SIZE));
+  iconPage = Math.max(0, Math.min(iconPage, pages - 1));
+  const start = iconPage * ICON_PAGE_SIZE, shown = matches.slice(start, start + ICON_PAGE_SIZE);
+  $('iconCount').textContent = matches.length
+    ? matches.length.toLocaleString('es') + ' iconos · mostrando ' + (start + 1) + '–' + (start + shown.length)
+    : 'No hay iconos con esa búsqueda. Prueba otra palabra o categoría.';
+  $('iconPagination').hidden = pages <= 1;
+  $('iconPage').textContent = 'Página ' + (iconPage + 1) + ' de ' + pages;
+  $('iconPrev').disabled = iconPage === 0;
+  $('iconNext').disabled = iconPage === pages - 1;
+  iconPreviewObserver?.disconnect();
+  $('iconGrid').replaceChildren();
+  $('iconGrid').scrollTop = 0;
+  const loadPreview = preview => {
+    const icon = iconsById.get(preview.dataset.previewId);
+    loadIconPaths(icon).then(() => {
+      if (preview.isConnected) preview.replaceChildren(iconSvg(icon));
+    }).catch(() => { if (preview.isConnected) preview.textContent = '·'; });
+  };
+  if ('IntersectionObserver' in window) {
+    iconPreviewObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (!entry.isIntersecting || !entry.target.isConnected) return;
+      iconPreviewObserver.unobserve(entry.target); loadPreview(entry.target);
+    }), { root: $('iconGrid'), rootMargin: '80px' });
+  }
+  shown.forEach(icon => {
+    const tile = contentButton('', async () => {
+      const next = editorLines();
+      const target = iconTarget;
+      if (iconTarget == null && next.length >= 14) { toast('Se admiten hasta 14 líneas.'); return; }
+      tile.disabled = true;
+      try { await loadIconPaths(icon, true); }
+      catch (error) { tile.disabled = false; $('iconCount').textContent = error.message; return; }
+      if (!$('iconLibrary').open || !tile.isConnected) return;
+      const index = target ?? (next.length === 1 && !next[0].trim() ? 0 : next.length);
+      const color = parseContentLine(next[index] || '').color;
+      next[index] = iconToken(icon, color);
+      $('iconLibrary').close();
+      updateContent(next, undefined, index);
+    });
+    tile.classList.add('icon-tile'); tile.title = icon.name + ' · ' + icon.author + ' · ' + icon.license;
+    const name = document.createElement('span'); name.textContent = icon.name;
+    const author = document.createElement('small'); author.textContent = icon.author;
+    const preview = document.createElement('span'); preview.className = 'icon-preview'; preview.dataset.previewId = icon.id;
+    if (icon.paths) preview.appendChild(iconSvg(icon));
+    tile.append(preview, name, author); $('iconGrid').appendChild(tile);
+    if (!icon.paths) {
+      if (iconPreviewObserver) iconPreviewObserver.observe(preview);
+      else loadPreview(preview);
+    }
+  });
+}
+function resetIconSearch() { iconPage = 0; renderIconLibrary(); }
+[...new Set(iconLibrary.map(icon => icon.category))].sort((a, b) => a.localeCompare(b, 'es')).forEach(category => {
+  const option = document.createElement('option'); option.value = category; option.textContent = category;
+  $('iconCategory').appendChild(option);
+});
+[...new Set(iconLibrary.map(icon => icon.author))].sort((a, b) => a.localeCompare(b, 'es')).forEach(author => {
+  const option = document.createElement('option'); option.value = author; option.textContent = author;
+  $('iconAuthor').appendChild(option);
+});
+$('addTextLine').addEventListener('click', () => {
+  const next = editorLines(); if (next.length >= 14) return;
+  next.push(''); updateContent(next, undefined, next.length - 1);
+});
+$('addIconLine').addEventListener('click', () => openIconLibrary());
+$('closeIconLibrary').addEventListener('click', () => $('iconLibrary').close());
+$('iconLibrary').addEventListener('close', () => iconPreviewObserver?.disconnect());
+$('iconSearch').addEventListener('input', resetIconSearch);
+$('iconCategory').addEventListener('change', resetIconSearch);
+$('iconAuthor').addEventListener('change', resetIconSearch);
+$('iconPrev').addEventListener('click', () => { iconPage--; renderIconLibrary(); });
+$('iconNext').addEventListener('click', () => { iconPage++; renderIconLibrary(); });
+function usedIconCredits(lines) {
+  const icons = [...new Map(lines.filter(line => line.icon).map(line => [line.icon.id, line.icon])).values()];
+  return icons.map(icon => icon.name + ' (' + icon.id + ') — Icons made by ' + icon.author + ' (' + icon.authorUrl + '). '
+    + icon.source + ' — ' + icon.license + ': ' + icon.licenseUrl + '. Adaptación: fondo eliminado, color y tamaño ajustados.').join('\n\n');
+}
+$('downloadIconCredits').addEventListener('click', () => {
+  download(new Blob([$('iconCreditsText').value], { type: 'text/plain;charset=utf-8' }), fileBase() + '-creditos.txt');
+});
+
 const state = {mode:"equal"};
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
@@ -1565,6 +1934,7 @@ function measureLine(text,f,base,comp,trackEm,optical){
 // ---------------- ajuste ----------------
 // under=true: en cortes discretos, elige el corte más ancho que cabe a ese cuerpo (para Misma altura)
 function fitLine(L,Wt,S,d,under){
+  if (L.icon) return fitIcon(L, Wt, S);
   const s=L.samples, r=Wt/S, last=s[s.length-1], first=s[0];
   let pick, size, sx=1;
   if(L.discrete&&s.length>1){
@@ -1589,6 +1959,7 @@ function fitLine(L,Wt,S,d,under){
 }
 // Elige el corte más próximo y aplica solo la deformación restante.
 function fitLineToBox(line, width, height) {
+  if (line.icon) return fitIcon(line, width, height);
   let best = null;
   let distance = Infinity;
   for (const sample of line.samples) {
@@ -1605,6 +1976,11 @@ function fitLineToBox(line, width, height) {
   }
   return best;
 }
+function fitIcon(line, width, height) {
+  const ratio = line.bounds.width / line.bounds.height;
+  const size = Math.min(height, width / ratio);
+  return { size, h: height, inkW: size * ratio, sx: 1, u: ratio, lb: 0, w: null, g: null };
+}
 function totalFor(lines,Wt,S,gap){
   const fit=lines.map(L=>fitLine(L,Wt,S,DEF,false));
   return {fit,total:fit.reduce((a,x)=>a+x.h,0)+gap*(lines.length-1)};
@@ -1614,8 +1990,21 @@ function run(){
   saveSettings();
   const f=font();
   const raw=$("txt").value.split("\n").map(s=>s.trim()).filter(Boolean).slice(0,14);
-  const lines=raw.map(s=>$("upper").checked?s.toLocaleUpperCase("es"):s);
-  syncLineHeightControls(raw);
+  const content = raw.map(parseContentLine);
+  content.forEach(line => {
+    const icon = line.icon;
+    if (!icon || icon.paths || iconPosterLoads.has(icon.chunk) || iconChunkFailures.has(icon.chunk)) return;
+    iconPosterLoads.add(icon.chunk);
+    loadIconPaths(icon).catch(error => toast(error.message)).finally(() => {
+      iconPosterLoads.delete(icon.chunk); schedule();
+    });
+  });
+  const lines = content.map(line => line.iconId ? line : { ...line, text: $('upper').checked ? line.text.toLocaleUpperCase('es') : line.text });
+  syncContentLines();
+  syncLineHeightControls(content.map(line => line.icon ? 'Icono · ' + line.icon.name : line.iconId ? 'Icono no disponible' : line.text));
+  const credits = usedIconCredits(content);
+  $('iconCredits').hidden = !credits;
+  $('iconCreditsText').value = credits;
   const stretchLines = state.mode === 'lines' && $('lineFit').value === 'stretch';
   $('lineFitHelp').textContent = $('lineFit').value === 'stretch'
     ? 'Las letras se estiran para llenar exactamente el ancho y la altura que asignes a cada línea.'
@@ -1643,8 +2032,18 @@ function run(){
   { const es=exportSize({unit,W,H:outputH}); $('resOut').textContent=es.w+' × '+es.h+' px'; }
   const Wt=W-2*m, Hav=Math.max(H * 0.05, H-2*m-insideFooterH-footerGap);
   const notes=[];
+  if (editorLines().filter(text => text.trim()).length > 14) notes.push('El cartel imprime las primeras 14 líneas no vacías. El resto sigue disponible en la edición.');
+  lines.filter(line => line.iconId && !line.icon).forEach(line => notes.push('No se encuentra el icono «' + line.iconId + '». Elige otro en su línea.'));
+  if (!iconLibrary.length) notes.push('No se ha podido cargar la biblioteca de iconos. Comprueba assets/icons/library.js.');
+  if (content.some(line => line.icon && !line.icon.paths)) notes.push(content.some(line => line.icon && iconChunkFailures.has(line.icon.chunk))
+    ? 'No se han podido cargar los dibujos de algunos iconos. Vuelve a elegirlos en la biblioteca para reintentar.'
+    : 'Cargando los iconos del cartel…');
 
-  const measured=lines.map(t=>measureLine(t,f,base,comp,trackEm,$("optical").checked));
+  const measured = lines.map(line => {
+    if (!line.icon) return measureLine(line.iconId ? '¿?' : line.text, f, base, comp, trackEm, $('optical').checked);
+    const bounds = measureIcon(line.icon);
+    return { ...line, bounds, text: line.icon.name, asc: 1, desc: 0, samples: [{ u: bounds.width / bounds.height }] };
+  });
   let fit=[], total=0, scale=1;
   if(measured.length){
     if(state.mode==="equal" || state.mode==="lines"){
@@ -1653,12 +2052,13 @@ function run(){
       const weights = measured.map((L, i) => state.mode === 'lines' ? (heights[i] ?? 100) / 100 : 1);
       const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
       const hShare=Math.max(0.001, Hav-gap*(n-1))/weightSum;
-      const hMax=measured.map(L=>(Wt/(L.samples[0].u*(1-DEF)))*(L.asc+L.desc));
+      const hMax=measured.map(L=>L.icon ? Infinity : (Wt/(L.samples[0].u*(1-DEF)))*(L.asc+L.desc));
       const limits = hMax.map((height, i) => height / weights[i]);
       const stretch = state.mode === 'lines' && $('lineFit').value === 'stretch';
       const hT=stretch ? hShare : Math.min(hShare,...limits);
       fit=measured.map((L, i)=>{
         const lineHeight = hT * weights[i];
+        if (L.icon) return fitIcon(L, Wt, lineHeight);
         if (stretch) return fitLineToBox(L, Wt, lineHeight);
         const size=lineHeight/(L.asc+L.desc);
         const x=fitLine(L,Wt,size,DEF,true);
@@ -1678,7 +2078,7 @@ function run(){
       }
       const op=fit.map((x,i)=>x.opened?measured[i].text:null).filter(Boolean);
       if(op.length) notes.push("En "+list(op)+" he abierto el espaciado entre letras para que llegue al ancho.");
-    } else if(state.mode==="fill"&&measured[0].discrete){
+    } else if(state.mode==="fill"&&measured.some(line => line.discrete)){
       // con cortes sueltos el alto total no crece de forma continua: probamos muchos tamaños y nos quedamos con el que más se acerca sin pasarse
       let best=null;
       for(let i=0;i<=600;i++){
@@ -2232,6 +2632,22 @@ function draw(fit,measured,o){
   fit.forEach((x,i)=>{
     const L=measured[i], size=x.size*k;
     const inkW=x.inkW!=null?x.inkW*k:x.u*x.sx*size;
+    if (L.icon) {
+      const icon = iconSvg(L.icon);
+      const bounds = L.bounds;
+      icon.setAttribute('viewBox', [bounds.x, bounds.y, bounds.width, bounds.height].join(' '));
+      icon.setAttribute('x', o.m + (o.Wt - inkW) / 2);
+      icon.setAttribute('y', y + (x.h * k - size) / 2);
+      icon.setAttribute('width', inkW); icon.setAttribute('height', size);
+      icon.setAttribute('fill', L.color || fg);
+      icon.setAttribute('data-icon', L.icon.id);
+      icon.removeAttribute('aria-hidden'); icon.setAttribute('role', 'img'); icon.setAttribute('aria-label', L.icon.name);
+      const title = el('title', {}); title.textContent = L.icon.name; icon.prepend(title);
+      g.appendChild(icon);
+      rows.push({ text: L.icon.name, icon: L.icon.id, size, w: null, g: null, sx: 1, track: 0, top: y, bottom: y + x.h * k });
+      y += x.h * k + o.gap * k;
+      return;
+    }
     const ls=o.trackEm*size+(x.extraLs||0)*k;
     const inkLeft=o.m+(o.Wt-inkW)/2;
     const x0=inkLeft/x.sx - x.lb*size;
@@ -2293,10 +2709,14 @@ function draw(fit,measured,o){
   if($("grain").checked){
     svg.appendChild(el("rect",{x:0,y:0,width:o.W,height:o.outputH,filter:"url(#grain)",opacity:"0.13",style:"mix-blend-mode:multiply;pointer-events:none"}));
   }
-  lastLayout={rows,unit:o.unit,f:o.f,used:[...used],W:o.W,H:o.outputH,posterH:o.H};
+  const credits = usedIconCredits(measured);
+  if (credits) {
+    const description = el('desc', {}); description.textContent = credits; svg.prepend(description);
+  }
+  lastLayout={rows,unit:o.unit,f:o.f,used:[...used],W:o.W,H:o.outputH,posterH:o.H,credits};
   renderSpecs();
 }
-function widthCell(r,f){ return f.cuts?r.label:(f.w?r.w.toFixed(1).replace(".",","):"fija"); }
+function widthCell(r,f){ return r.icon ? 'vectorial' : f.cuts?r.label:(f.w?r.w.toFixed(1).replace(".",","):"fija"); }
 function renderSpecs(){
   const b=$("specBody"); b.textContent="";
   if(!lastLayout) return;
@@ -2304,7 +2724,7 @@ function renderSpecs(){
   $("sizeHead").textContent=L.unit==="mm"?"Cuerpo (pt)":"Cuerpo (px)";
   L.rows.forEach(r=>{
     const tr=document.createElement("tr");
-    [r.text,fmtSize(r.size,L.unit),widthCell(r,L.f),r.g!=null?String(r.g):"del corte",(r.track>0?"+":"")+r.track,Math.round(r.sx*100)+" %"]
+    [r.text,fmtSize(r.size,L.unit),widthCell(r,L.f),r.icon ? '—' : r.g!=null?String(r.g):"del corte",r.icon ? '—' : (r.track>0?"+":"")+r.track,Math.round(r.sx*100)+" %"]
       .forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
     b.appendChild(tr);
   });
@@ -2332,6 +2752,7 @@ async function googleFaceCss(f){
 }
 async function fontCss(){
   const L=lastLayout, f=L.f;
+  if (!L.used.length) return '';
   if(f.files){
     return f.files.filter(x=>L.used.includes(x.family)).map(x=>{
       const desc=(!f.cuts&&f.w)?"font-stretch:"+f.w[0]+"% "+f.w[1]+"%;":"";
@@ -2342,6 +2763,10 @@ async function fontCss(){
   return await googleFaceCss(f);
 }
 async function buildSvg(){
+  const icons = $('txt').value.split('\n').filter(text => text.trim()).slice(0, 14).map(parseContentLine).filter(line => line.icon).map(line => line.icon);
+  await Promise.all(icons.map(icon => loadIconPaths(icon, true)));
+  // Incluye cambios recientes aunque la exportación se pulse antes del siguiente frame.
+  run();
   if ($('wrk').checked && $('wsource').value !== 'procedural') {
     await PaperWrinkles.load($('wsource').value);
     if (!PaperWrinkles.has($('wsource').value)) {
@@ -2411,13 +2836,25 @@ $("dlPng").addEventListener("click",()=>busy($("dlPng"),async()=>{
     const img=await load();
     const cv=document.createElement("canvas"); cv.width=pxW; cv.height=pxH;
     const cx=cv.getContext("2d"); cx.drawImage(img,0,0,pxW,pxH);
-    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    let blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    if (L.credits) blob = await setPngCredits(blob, L.credits);
     if(es.ppi) download(await setPngDpi(blob,es.ppi),fileBase()+".png");
     else download(blob,fileBase()+".png");
     toast("PNG descargado: "+pxW+" × "+pxH+" px.");
   }catch(e){ toast("No he podido generar el PNG. Prueba con el SVG."); }
   finally{ URL.revokeObjectURL(url); }
 }));
+// iTXt conserva los créditos en UTF-8, también cuando incluyen nombres en español.
+async function setPngCredits(blob, credits) {
+  const bytes = new TextEncoder().encode('Description\0\0\0\0\0' + credits);
+  const chunk = new Uint8Array(bytes.length + 12);
+  const view = new DataView(chunk.buffer);
+  view.setUint32(0, bytes.length);
+  chunk.set([0x69, 0x54, 0x58, 0x74], 4); chunk.set(bytes, 8);
+  view.setUint32(chunk.length - 4, crc32(chunk.subarray(4, chunk.length - 4)));
+  const original = new Uint8Array(await blob.arrayBuffer());
+  return new Blob([original.subarray(0, 33), chunk, original.subarray(33)], { type: 'image/png' });
+}
 // Añade el bloque pHYs para que el PNG declare 300 ppp
 async function setPngDpi(blob,dpi){
   const buf=new Uint8Array(await blob.arrayBuffer());
@@ -2439,7 +2876,7 @@ $("copySpecs").addEventListener("click",async()=>{
   if(!lastLayout) return;
   const L=lastLayout;
   const head="Tipografía: "+L.f.name+"\n";
-  const body=L.rows.map(r=>r.text+"  ·  cuerpo "+fmtSize(r.size,L.unit)+"  ·  "+(L.f.cuts?"corte "+r.label:(L.f.w?"anchura "+r.w.toFixed(1).replace(".",","):"anchura fija"))+(r.g!=null?"  ·  peso "+r.g:"")+"  ·  tracking "+r.track+(Math.abs(r.sx-1)>0.004?"  ·  escala horizontal "+Math.round(r.sx*100)+" %":"")).join("\n");
+  const body=L.rows.map(r=>r.icon ? r.text + '  ·  icono vectorial  ·  altura ' + fmtLen(r.size, L.unit) : r.text+"  ·  cuerpo "+fmtSize(r.size,L.unit)+"  ·  "+(L.f.cuts?"corte "+r.label:(L.f.w?"anchura "+r.w.toFixed(1).replace(".",","):"anchura fija"))+(r.g!=null?"  ·  peso "+r.g:"")+"  ·  tracking "+r.track+(Math.abs(r.sx-1)>0.004?"  ·  escala horizontal "+Math.round(r.sx*100)+" %":"")).join("\n");
   try{ await navigator.clipboard.writeText(head+body); toast("Medidas copiadas al portapapeles."); }
   catch(e){ toast("No he podido copiar. Tu navegador bloquea el portapapeles en este contexto."); }
 });

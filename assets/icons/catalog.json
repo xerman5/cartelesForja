@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/game-icons/icons",
+  "revision": "82d948812bfe3f269ef8f731dcdb07b08160edc4",
+  "icons": 4239,
+  "regularIcons": 4180,
+  "badges": 59,
+  "licenses": {
+    "CC BY 3.0": 4116,
+    "CC0 1.0": 123
+  },
+  "inlineIcons": 59,
+  "chunks": 33
+}

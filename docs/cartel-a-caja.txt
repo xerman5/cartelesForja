@@ -10,10 +10,10 @@ CÓMO USARLA
 
 En tu ordenador:
   Abre tipografico.html con un navegador actualizado. La familia Tusker incluida se carga automáticamente,
-  también sin servidor. Conserva la carpeta fonts/ junto al editor.
+  también sin servidor. Conserva las carpetas fonts/ y assets/ junto al editor.
 
 En tu hosting:
-  Sube los HTML, editors.css, docs/ y fonts/ a tu web y abre su dirección en el navegador.
+  Sube los HTML, editors.css, docs/, assets/ y fonts/ a tu web y abre su dirección en el navegador.
   No necesita base de datos ni nada más.
 
 
@@ -27,6 +27,54 @@ teclado, Inicio y Fin. Dentro de cada pestaña, las cajas se pliegan pulsando su
 02 · Estilo         Colores, papel, grano, imagen en el fondo o las letras y arrugas del pegado.
 03 · Información    Zona inferior con los detalles de la partida, u otras disposiciones.
 04 · Formato        Tamaño del cartel, resolución de descarga y margen.
+
+TEXTO E ICONOS
+-------------
+
+Cada línea puede ser una palabra/frase o un icono. El selector Texto / Icono cambia
+su contenido; al elegir un icono se abre la biblioteca. Si cancelas, se conserva
+el texto original. Volver a Texto deja un campo vacío para escribir.
+
+«+ Texto» y «+ Icono» añaden líneas. Las flechas las reordenan junto con su altura;
+«×» las elimina. Hay hasta 14 filas editables. Las vacías no se imprimen. Puedes
+pegar varias líneas en un campo de texto o abrir «Edición multilínea».
+
+La biblioteca contiene los 4.239 SVG del repositorio de Game-icons.net:
+4.180 iconos y 59 insignias circulares. Busca por nombre original en inglés,
+por los nombres españoles de los 59 iconos iniciales o por palabras relacionadas
+en español, como «caballo», «dragón», «barco» o «dado». No hace falta escribir
+tildes; puedes combinar varias palabras y filtrar por categoría y autor.
+
+Se muestran hasta 96 resultados por página; Anterior / Siguiente recorre el resto.
+El índice de búsqueda se prepara una sola vez, y los dibujos se cargan en bloques
+solo cuando se ven las miniaturas o se usan en un cartel. No se dibujan miles de
+iconos al abrir la biblioteca. Todos funcionan sin conexión: conserva la carpeta
+assets/icons/ completa, incluidos library.js y los archivos paths-*.js.
+
+Los iconos mantienen sus proporciones y quedan centrados dentro de la altura de
+su línea. Si la caja es muy ancha o alta, queda aire a sus lados o arriba y abajo.
+No se estiran como las letras. En Reparto → Por línea puedes ajustar su altura.
+Por defecto usan el color de la tinta; activa «Color propio» para elegir otro.
+El grano, el tampón, la opacidad y las arrugas también les afectan. Una imagen
+aplicada a las letras rellena asimismo las siluetas de los iconos.
+
+El guardado automático y los archivos .cartel.json conservan texto, iconos y
+colores. Se mantiene el formato anterior: en «Edición multilínea» un icono se
+escribe [icon:elephant] o [icon:elephant:#d2ad43]. No cambies su identificador si
+quieres conservarlo. Un identificador desconocido muestra un aviso y «¿?» en
+su lugar; elige otro icono para repararlo.
+
+Los iconos son de Lorc, Delapouite, Skoll y el resto de colaboradores de
+Game-icons.net. La mayoría usan CC BY 3.0, con atribución; los de Viscious Speed
+y Zeromancer usan CC0. «Créditos de los iconos utilizados» prepara el texto con
+la licencia de cada autor y permite descargarlo. Acompaña los créditos CC BY
+al publicar o imprimir el cartel. PNG y SVG llevan además los créditos en sus
+metadatos; el SVG incluye los trazados vectoriales, sin depender de archivos
+externos de iconos. La descarga espera a que los iconos estén cargados.
+La procedencia de cada dibujo y cómo actualizar la biblioteca se explican en
+assets/icons/README.md. Los identificadores de la selección inicial se conservan,
+y las variantes de distintos autores están disponibles sin sobrescribirse.
+
 
 ALTURA POR LÍNEA
 ---------------
